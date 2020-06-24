@@ -1,13 +1,14 @@
 from flask import Flask
-from flask_restful import Resource, Api
+
+from event_streams_api.stream.api import api as stream
+from event_streams_api.subscribable.api import api as subscribable
+from event_streams_api.sinks.api import api as sinks
+
 
 app = Flask(__name__)
-api = Api(app)
+app.url_map.strict_slashes = False
 
-
-class HelloWorld(Resource):
-    def get(self):
-        return {"hello": "world"}
-
-
-api.add_resource(HelloWorld, "/")
+app.register_blueprint(stream.blueprint)
+app.register_blueprint(sinks.blueprint)  # , url_prefix="/sinks")
+app.register_blueprint(subscribable.blueprint)
+# app.register_blueprint(history.blueprint)
