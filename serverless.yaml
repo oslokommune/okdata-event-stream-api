@@ -1,0 +1,66 @@
+frameworkVersion: ">=1.64.0 <2.0.0"
+service: event-streams-api
+provider:
+  name: aws
+  runtime: python3.7
+  memorySize: 128
+  region: ${opt:region, 'eu-west-1'}
+  stage: ${opt:stage, 'dev'}
+  deploymentBucket:
+    name: ${self:custom.deploymentBucket.${self:provider.stage}, self:custom.deploymentBucket.dev}
+    serverSideEncryption: AES256
+  deploymentPrefix: deploy
+  rolePermissionsBoundary: "arn:aws:iam::#{AWS::AccountId}:policy/oslokommune/oslokommune-boundary"
+  iamManagedPolicies:
+    - 'arn:aws:iam::#{AWS::AccountId}:policy/lambda-boilerplate-policy'
+    - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
+  tags:
+    GIT_REV: ${git:branch}:${git:sha1}
+    VERSION: ${self:custom.version}
+  environment:
+    GIT_REV: ${git:branch}:${git:sha1}
+    STAGE: ${self:provider.stage}
+    VERSION: ${self:custom.version}
+package:
+  exclude:
+    - '**/*'
+  include:
+    - 'event_streams_api/**/*.py'
+    - '*.py'
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
+  - serverless-plugin-git-variables
+  - serverless-pseudo-parameters
+  - serverless-es-logs
+
+resources:
+  Description: |
+    ${self:service} ${git:branch}:${git:sha1}
+    ${git:message}
+
+custom:
+  version: 0.1.0
+  wsgi:
+    app: app.app
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: non-linux
+    slim: true
+    usePoetry: false
+  esLogs:
+    endpoint: ${ssm:/dataplatform/elasticsearch/endpoint}
+    index: dataplatform-services
+    filterPattern: '{ $.function_name = "*" }'
+  exportGitVariables: false
+  deploymentBucket:
+    prod: ok-origo-dataplatform-config-prod
+    dev: ok-origo-dataplatform-config-dev
