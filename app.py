@@ -1,8 +1,8 @@
 from flask import Flask
 
-from event_streams_api.stream.api import api as stream
-from event_streams_api.subscribable.api import api as subscribable
-from event_streams_api.sinks.api import api as sinks
+from event_streams_api.stream import api as stream
+from event_streams_api.subscribable import api as subscribable
+from event_streams_api.sinks import api as sinks
 
 
 app = Flask(__name__)

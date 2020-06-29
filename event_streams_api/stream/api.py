@@ -1,6 +1,6 @@
 from flask_restful import abort
 
-from event_streams_api.common.api import Api, Resource
+from event_streams_api.common import Api, Resource
 from event_streams_api.common.decorators import (
     requires_auth,
     requires_dataset_ownership,
