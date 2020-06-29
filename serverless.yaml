@@ -25,7 +25,7 @@ package:
   exclude:
     - '**/*'
   include:
-    - 'event_streams_api/**/*.py'
+    - 'event_streams/**/*.py'
     - '*.py'
 
 functions:

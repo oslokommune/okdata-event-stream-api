@@ -1,6 +1,6 @@
 from flask_restful import abort
 
-from event_streams_api.common import Api, Resource
+from event_streams.common import Api, Resource
 
 
 class SubscribableResource(Resource):
