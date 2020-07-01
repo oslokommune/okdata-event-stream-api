@@ -1,6 +1,6 @@
 from typing import List
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, validator
 
 
 class Resource(BaseModel):
@@ -22,8 +22,12 @@ class StackTemplate(BaseModel):
 
 
 class Stack(BaseModel):
-    cf_stack_template: StackTemplate
+    cf_stack_template: StackTemplate  # https://pydantic-docs.helpmanual.io/usage/types/#json-type (?)
     cf_status: str = "INACTIVE"
+
+    @validator("cf_status")
+    def must_be_uppercase(cls, v):
+        return v.upper()
 
 
 class Subscribable(Stack):
@@ -31,7 +35,7 @@ class Subscribable(Stack):
 
 
 class Sink(Stack):
-    id: str
+    id: str  # ShortUUID = Field(default_factory=ShortUUID...)
     type: str
     config: dict
 
@@ -40,7 +44,7 @@ class EventStream(Stack):
     id: str
     create_raw: bool
     updated_by: str
-    updated_at: datetime = datetime.now()
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
     deleted: bool = False
     subscribable: Subscribable = None
     sinks: List[Sink] = list()
@@ -48,41 +52,3 @@ class EventStream(Stack):
     @property
     def is_active(self):
         return self.cf_status == "ACTIVE"
-
-
-es = EventStream(**{
-    "id": "dataset_id/version",
-    "cf_stack_template": {
-        "resources": [{"type": "foo", "properties": {}, "tags": {}}],
-        "description": "Stack template description."
-    },
-    "cf_status": "CREATE_IN_PROGRESS",
-    "subscribable": {
-        "enabled": True,
-        "cf_stack_template": {
-            "resources": [{"type": "foo", "properties": {}, "tags": {}}],
-            "description": "Stack template description."
-        },
-        "cf_status": "active"
-    },
-    # "sinks": [{
-    #     "id": "short-uuid",
-    #     "type": "elasticsearch",
-    #     "config": {"es_cluster": "some-uri"},
-    #     "cf_stack_template": {"foo": "bar"},
-    #     "cf_status": "create_in_progress"
-    # }],
-    "create_raw": True,
-    "updated_by": "janedoe"
-})
-esd = es.dict()
-esj = es.json(indent=4, by_alias=True)
-ess = es.schema_json(indent=2, by_alias=True)
-
-print("=" * 50)
-print(es)
-print(esd)
-print(esj)
-print(es.is_active)
-print("-" * 25)
-# print(ess)
