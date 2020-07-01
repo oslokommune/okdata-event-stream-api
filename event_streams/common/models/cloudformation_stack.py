@@ -1,5 +1,5 @@
 from typing import List, Dict
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field
 
 
 class BaseStackModel(BaseModel):
@@ -20,15 +20,8 @@ class BaseStackModel(BaseModel):
 
 
 class StackResourceTag(BaseStackModel):
-    key: str
-    value: str
-
-    @validator("key", "value")
-    def check_max_length(cls, value, field):
-        max_length = 256 if field.name == "value" else 128
-        if len(value) > max_length:
-            raise ValueError(f"length of {field.name} cannot exceed {max_length}")
-        return value
+    key: str = Field(max_length=128)
+    value: str = Field(max_length=256)
 
 
 class StackResource(BaseStackModel):
