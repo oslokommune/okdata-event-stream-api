@@ -1,3 +1,3 @@
-from .event_streams import EventStream
+from .event_stream import EventStream
 
 __all__ = ["EventStream"]

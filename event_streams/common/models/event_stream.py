@@ -1,24 +1,10 @@
-from typing import List
 from datetime import datetime
+from typing import List
 from pydantic import BaseModel, Field, validator
 
+# from pydantic.generics import GenericModel
 
-class Resource(BaseModel):
-    type: str
-    properties: dict
-    tags: dict
-
-
-class StackTemplate(BaseModel):
-    description: str
-    resources: List[Resource]
-
-    class Config:
-        allow_population_by_field_name = True
-
-        @classmethod
-        def alias_generator(cls, string: str) -> str:
-            return string.capitalize()
+from .cloudformation_stack import StackTemplate
 
 
 class Stack(BaseModel):
@@ -52,3 +38,8 @@ class EventStream(Stack):
     @property
     def is_active(self):
         return self.cf_status == "ACTIVE"
+
+    @property
+    def cf_stack_name(self):
+        [dataset_id, version] = id.split("/")
+        return f"stream-manager-{dataset_id}-{version}"
