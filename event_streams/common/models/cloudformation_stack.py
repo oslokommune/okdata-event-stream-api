@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 from pydantic import BaseModel, validator
 
 
@@ -39,4 +39,4 @@ class StackResource(BaseStackModel):
 
 class StackTemplate(BaseStackModel):
     description: str
-    resources: List[StackResource]
+    resources: Dict[str, StackResource]
