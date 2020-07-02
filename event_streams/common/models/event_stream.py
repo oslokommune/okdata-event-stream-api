@@ -1,5 +1,6 @@
-from datetime import datetime
 from typing import List
+from datetime import datetime
+from shortuuid import ShortUUID
 from pydantic import BaseModel, Field, validator
 
 # from pydantic.generics import GenericModel
@@ -8,11 +9,11 @@ from .cloudformation_stack import StackTemplate
 
 
 class Stack(BaseModel):
-    cf_stack_template: StackTemplate  # https://pydantic-docs.helpmanual.io/usage/types/#json-type (?)
+    cf_stack_template: StackTemplate
     cf_status: str = "INACTIVE"
 
-    @validator("cf_status")
-    def must_be_uppercase(cls, v):
+    @validator("cf_status", allow_reuse=True)
+    def make_uppercase(cls, v):
         return v.upper()
 
 
@@ -21,9 +22,9 @@ class Subscribable(Stack):
 
 
 class Sink(Stack):
-    id: str  # ShortUUID = Field(default_factory=ShortUUID...)
     type: str
     config: dict
+    id: str = Field(default_factory=lambda: ShortUUID().random(length=5))
 
 
 class EventStream(Stack):
