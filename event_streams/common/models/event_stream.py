@@ -1,32 +1,19 @@
 from typing import List
 from datetime import datetime
+from shortuuid import ShortUUID
 from pydantic import BaseModel, Field, validator
 
+# from pydantic.generics import GenericModel
 
-class Resource(BaseModel):
-    type: str
-    properties: dict
-    tags: dict
-
-
-class StackTemplate(BaseModel):
-    description: str
-    resources: List[Resource]
-
-    class Config:
-        allow_population_by_field_name = True
-
-        @classmethod
-        def alias_generator(cls, string: str) -> str:
-            return string.capitalize()
+from .cloudformation_stack import StackTemplate
 
 
 class Stack(BaseModel):
-    cf_stack_template: StackTemplate  # https://pydantic-docs.helpmanual.io/usage/types/#json-type (?)
+    cf_stack_template: StackTemplate
     cf_status: str = "INACTIVE"
 
-    @validator("cf_status")
-    def must_be_uppercase(cls, v):
+    @validator("cf_status", allow_reuse=True)
+    def make_uppercase(cls, v):
         return v.upper()
 
 
@@ -35,9 +22,9 @@ class Subscribable(Stack):
 
 
 class Sink(Stack):
-    id: str  # ShortUUID = Field(default_factory=ShortUUID...)
     type: str
     config: dict
+    id: str = Field(default_factory=lambda: ShortUUID().random(length=5))
 
 
 class EventStream(Stack):
@@ -52,3 +39,8 @@ class EventStream(Stack):
     @property
     def is_active(self):
         return self.cf_status == "ACTIVE"
+
+    @property
+    def cf_stack_name(self):
+        [dataset_id, version] = id.split("/")
+        return f"stream-manager-{dataset_id}-{version}"
