@@ -5,13 +5,35 @@
 #    pip-compile
 #
 aniso8601==8.0.0          # via flask-restful
+attrs==19.3.0             # via jsonschema
+certifi==2020.6.20        # via requests
+chardet==3.0.4            # via requests
 click==7.1.1              # via flask
+ecdsa==0.15               # via python-jose
 flask-restful==0.3.8      # via event-streams-api (setup.py)
 flask==1.1.2              # via event-streams-api (setup.py), flask-restful
+idna==2.10                # via requests
+importlib-metadata==1.7.0  # via jsonschema
 itsdangerous==1.1.0       # via flask
 jinja2==2.11.1            # via flask
+jsonschema==3.2.0         # via origo-sdk-python
 markupsafe==1.1.1         # via jinja2
+origo-sdk-python==0.2.3   # via event-streams-api (setup.py)
+prettytable==0.7.2        # via origo-sdk-python
+pyasn1==0.4.8             # via python-jose, rsa
 pydantic==1.5.1           # via event-streams-api (setup.py)
+pyjwt==1.7.1              # via origo-sdk-python
+pyrsistent==0.16.0        # via jsonschema
+python-jose==3.1.0        # via python-keycloak
+python-keycloak==0.21.0   # via origo-sdk-python
 pytz==2019.3              # via flask-restful
-six==1.14.0               # via flask-restful
+requests==2.24.0          # via origo-sdk-python, python-keycloak
+rsa==4.6                  # via python-jose
+shortuuid==1.0.1          # via event-streams-api (setup.py)
+six==1.14.0               # via ecdsa, flask-restful, jsonschema, pyrsistent, python-jose
+urllib3==1.25.9           # via origo-sdk-python, requests
 werkzeug==1.0.1           # via flask
+zipp==3.1.0               # via importlib-metadata
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
