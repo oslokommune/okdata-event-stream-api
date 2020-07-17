@@ -50,7 +50,7 @@ class StreamResource(Resource):
             {
                 "id": f"{dataset_id}/{version}",
                 "create_raw": True,
-                "updated_by": "janedoe",
+                "updated_by": g.principal_id,
                 "updated_at": "2020-06-23",
                 "deleted": False,
                 "cf_status": "active",
