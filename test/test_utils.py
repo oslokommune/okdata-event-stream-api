@@ -13,11 +13,11 @@ def create_event_streams_table(item_list=[], region="eu-west-1"):
         TableName=table_name,
         KeySchema=[
             {"AttributeName": "id", "KeyType": "HASH"},
-            {"AttributeName": "event_stream_version", "KeyType": "RANGE"},
+            {"AttributeName": "config_version", "KeyType": "RANGE"},
         ],
         AttributeDefinitions=[
             {"AttributeName": "id", "AttributeType": "S"},
-            {"AttributeName": "event_stream_version", "AttributeType": "S"},
+            {"AttributeName": "config_version", "AttributeType": "S"},
         ],
         ProvisionedThroughput={"ReadCapacityUnits": 1, "WriteCapacityUnits": 1},
         GlobalSecondaryIndexes=[

@@ -11,9 +11,9 @@ class EventStreamsTable:
         dynamodb = boto3.resource("dynamodb", region_name=os.environ["AWS_REGION"])
         self.table = dynamodb.Table(table_name)
 
-    def put_event_stream(self, event_stream: EventStream, event_stream_version):
+    def put_event_stream(self, event_stream: EventStream, config_version):
         event_stream_item = json.loads(event_stream.json())
-        event_stream_item["event_stream_version"] = event_stream_version
+        event_stream_item["config_version"] = config_version
         self.table.put_item(Item=event_stream_item)
 
     def get_event_stream(self, event_stream_id):
@@ -22,6 +22,6 @@ class EventStreamsTable:
         )["Items"]
         if event_stream_items:
             current_item = max(
-                event_stream_items, key=lambda item: item["event_stream_version"]
+                event_stream_items, key=lambda item: item["config_version"]
             )
             return EventStream(**current_item)

@@ -38,7 +38,7 @@ class EventStreamService:
                 "cf_status": "CREATE_IN_PROGRESS",
             }
         )
-        self.event_streams_table.put_event_stream(event_stream, event_stream_version=1)
+        self.event_streams_table.put_event_stream(event_stream, config_version=1)
         self.cloudformation_client.create_stack(
             name=event_stream.cf_stack_name,
             template=event_stream.cf_stack_template.json(),
