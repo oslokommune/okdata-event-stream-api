@@ -1,6 +1,5 @@
 import os
 import datetime
-from origo.config import Config
 from origo.data.dataset import Dataset
 from database import EventStreamsTable, EventStream, StackTemplate
 from clients import CloudformationClient
@@ -11,10 +10,8 @@ pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']
 
 
 class EventStreamService:
-    def __init__(self):
-        origo_config = Config()
-        origo_config.config["cacheCredentials"] = False
-        self.dataset_client = Dataset(config=origo_config)
+    def __init__(self, dataset_client: Dataset):
+        self.dataset_client = dataset_client
         self.cloudformation_client = CloudformationClient()
         self.event_streams_table = EventStreamsTable()
 

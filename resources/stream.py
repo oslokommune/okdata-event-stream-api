@@ -10,8 +10,12 @@ logger.setLevel(logging.INFO)
 
 
 class StreamResource(Resource):
-    def __init__(self):
-        self.event_stream_service = EventStreamService()
+    def __init__(
+        self, keycloak_client, simple_dataset_authorizer_client, dataset_client
+    ):
+        self.keycloak_client = keycloak_client
+        self.simple_dataset_authorizer_client = simple_dataset_authorizer_client
+        self.event_stream_service = EventStreamService(dataset_client)
 
     @requires_auth
     @requires_dataset_ownership

@@ -5,7 +5,7 @@ from moto import mock_dynamodb2, mock_cloudformation, mock_sts, mock_ssm
 from clients import CloudformationClient
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_boto(monkeypatch):
     mock_dynamodb2().start()
     mock_cloudformation().start()

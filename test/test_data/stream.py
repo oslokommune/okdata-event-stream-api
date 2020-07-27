@@ -1,4 +1,5 @@
 from database import EventStream
+from clients.keycloak_config import KeycloakConfig
 
 dataset_id = "some-dataset-id"
 version = "1"
@@ -100,3 +101,6 @@ event_stream = EventStream(
         "sinks": [],
     }
 )
+
+
+ssm_parameters = KeycloakConfig("mock", "mock", "mock", "mock")

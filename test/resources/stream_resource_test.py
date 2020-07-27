@@ -4,16 +4,17 @@ from services import ResourceConflict, EventStreamService
 import pytest
 import test.test_data.stream as test_data
 from unittest.mock import ANY
-from .conftest import username, valid_token
+from .conftest import username, valid_token, valid_token_no_access
 
 
 dataset_id = test_data.dataset_id
 version = test_data.version
 auth_header = {"Authorization": f"bearer {valid_token}"}
-auth_header_invalid = {"Authorization": "bearer blablabla"}
 
 
-def test_post_201(mock_client, mock_event_stream_service, mock_boto, mock_keycloak):
+def test_post_201(
+    mock_client, mock_event_stream_service, mock_keycloak, mock_authorizer
+):
     response = mock_client.post(f"/{dataset_id}/{version}", headers=auth_header)
 
     EventStreamService.create_event_stream.assert_called_once_with(
@@ -29,7 +30,7 @@ def test_post_201(mock_client, mock_event_stream_service, mock_boto, mock_keyclo
 
 
 def test_post_not_create_raw(
-    mock_client, mock_event_stream_service, mock_boto, mock_keycloak
+    mock_client, mock_event_stream_service, mock_keycloak, mock_authorizer
 ):
     mock_client.post(
         f"/{dataset_id}/{version}", json={"create_raw": False}, headers=auth_header
@@ -43,15 +44,15 @@ def test_post_not_create_raw(
     )
 
 
-def test_post_401_invalid_token(mock_client, mock_keycloak, mock_boto):
+def test_post_401_invalid_token(mock_client, mock_keycloak, mock_authorizer):
     response = mock_client.post(
-        f"/{dataset_id}/{version}", headers=auth_header_invalid,
+        f"/{dataset_id}/{version}", headers={"Authorization": "bearer blablabla"},
     )
     assert response.status_code == 401
     assert json.loads(response.data) == {"message": "Invalid access token"}
 
 
-def test_post_400_invalid_header_value(mock_client, mock_keycloak, mock_boto):
+def test_post_400_invalid_header_value(mock_client, mock_keycloak, mock_authorizer):
     response = mock_client.post(
         f"/{dataset_id}/{version}", headers={"Authorization": "blablabla"}
     )
@@ -61,14 +62,26 @@ def test_post_400_invalid_header_value(mock_client, mock_keycloak, mock_boto):
     }
 
 
-def test_post_400_no_authorization_header(mock_client, mock_keycloak, mock_boto):
+def test_post_400_no_authorization_header(mock_client, mock_keycloak, mock_authorizer):
     response = mock_client.post(f"/{dataset_id}/{version}")
     assert response.status_code == 400
     assert json.loads(response.data) == {"message": "Missing authorization header"}
 
 
+def test_post_403_invalid_token(mock_client, mock_keycloak, mock_authorizer):
+    response = mock_client.post(
+        f"/{dataset_id}/{version}",
+        headers={"Authorization": f"bearer {valid_token_no_access}"},
+    )
+    assert response.status_code == 403
+    assert json.loads(response.data) == {"message": "Forbidden"}
+
+
 def test_post_409(
-    mock_client, mock_event_stream_service_resource_conflict, mock_boto, mock_keycloak
+    mock_client,
+    mock_event_stream_service_resource_conflict,
+    mock_keycloak,
+    mock_authorizer,
 ):
     response = mock_client.post(
         f"/{dataset_id}/{version}", json={"create_raw": False}, headers=auth_header
@@ -80,7 +93,7 @@ def test_post_409(
 
 
 def test_post_500(
-    mock_client, mock_event_stream_service_server_error, mock_boto, mock_keycloak
+    mock_client, mock_event_stream_service_server_error, mock_keycloak, mock_authorizer,
 ):
     response = mock_client.post(f"/{dataset_id}/{version}", headers=auth_header)
     assert response.status_code == 500

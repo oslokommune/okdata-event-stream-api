@@ -1,15 +1,11 @@
 import re
 from functools import wraps
 from flask import g, request, make_response
-from clients import setup_keycloak_client
-
-# from flask_restful import abort
 
 
 def requires_auth(method):
     @wraps(method)
-    def decorated_function(*args, **kwargs):
-        keycloak_client = setup_keycloak_client()
+    def decorated_function(self, **kwargs):
         auth_header = request.headers.get("Authorization")
         if auth_header:
             pattern = re.compile("^(b|B)earer [-0-9a-zA-Z\\._]*$")
@@ -25,11 +21,11 @@ def requires_auth(method):
         else:
             return make_response({"message": "Missing authorization header"}, 400)
 
-        introspected = keycloak_client.introspect(bearer_token)
+        introspected = self.keycloak_client.introspect(bearer_token)
         if introspected["active"]:
             g.principal_id = introspected["username"]
-            g.access_token = bearer_token
-            return method(*args, **kwargs)
+            g.bearer_token = bearer_token
+            return method(self, **kwargs)
         else:
             return make_response({"message": "Invalid access token"}, 401)
 
@@ -38,9 +34,14 @@ def requires_auth(method):
 
 def requires_dataset_ownership(method):
     @wraps(method)
-    def decorated_function(*args, **kwargs):
-        print(f"principal_id={g.principal_id}")
-        # abort(403)
-        return method(*args, **kwargs)
+    def decorated_function(self, dataset_id, **kwargs):
+        dataset_access = self.simple_dataset_authorizer_client.check_dataset_access(
+            dataset_id, bearer_token=g.bearer_token
+        )
+
+        if dataset_access["access"]:
+            return method(self, dataset_id, **kwargs)
+        else:
+            return make_response({"message": "Forbidden"}, 403)
 
     return decorated_function

@@ -4,6 +4,7 @@ from freezegun import freeze_time
 from origo.data.dataset import Dataset
 from services import EventStreamService, ResourceConflict
 from services.stream import generate_event_stream_cf_template
+from clients import setup_origo_sdk
 
 import test.test_data.stream as test_data
 
@@ -17,9 +18,13 @@ updated_by = test_data.updated_by
 
 
 @freeze_time(test_data.utc_now)
-def test_create_event_stream(mock_origo_sdk, mock_boto):
+def test_create_event_stream(mock_dataset, mock_boto):
     test_utils.create_event_streams_table()
-    event_stream_service = EventStreamService()
+
+    event_stream_service = EventStreamService(
+        setup_origo_sdk(test_data.ssm_parameters, Dataset)
+    )
+
     event_stream = event_stream_service.create_event_stream(
         dataset_id, version, updated_by, True
     )
@@ -56,7 +61,7 @@ def test_generate_event_stream_cf_template():
 
 
 @pytest.fixture()
-def mock_origo_sdk(monkeypatch):
+def mock_dataset(monkeypatch):
     def get_dataset(self, id):
         if id == dataset_id:
             return {"confidentiality": test_data.confidentiality}

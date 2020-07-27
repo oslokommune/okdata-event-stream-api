@@ -1,10 +1,14 @@
 import pytest
-from app import app as flask_app
 from keycloak import KeycloakOpenID
+from origo.dataset_authorizer.simple_dataset_authorizer_client import (
+    SimpleDatasetAuthorizerClient,
+)
 
 
 @pytest.fixture
-def mock_client():
+def mock_client(mock_boto):
+    from app import app as flask_app
+
     # Configure the application for testing and disable error catching during
     # request handling for better reports. Required in order for exceptions
     # to propagate to the test client.
@@ -17,13 +21,27 @@ def mock_client():
 
 
 valid_token = "valid-token"
+valid_token_no_access = "valid-token-no-access"
 username = "janedoe"
+
+
+@pytest.fixture
+def mock_authorizer(monkeypatch):
+    def dataset_access(self, dataset, bearer_token):
+        if bearer_token == valid_token:
+            return {"access": True}
+        else:
+            return {"access": False}
+
+    monkeypatch.setattr(
+        SimpleDatasetAuthorizerClient, "check_dataset_access", dataset_access
+    )
 
 
 @pytest.fixture
 def mock_keycloak(monkeypatch):
     def introspect(self, token):
-        if token == valid_token:
+        if token in [valid_token, valid_token_no_access]:
             return {
                 "exp": 1594907114,
                 "iat": 1594906814,
