@@ -1,6 +1,6 @@
 import logging
 from flask_restful import abort
-from flask import request, make_response, g, jsonify
+from flask import request, make_response, g, jsonify, current_app
 
 from resources import Resource, requires_auth, requires_dataset_ownership
 from services import EventStreamService, ResourceConflict
@@ -10,12 +10,8 @@ logger.setLevel(logging.INFO)
 
 
 class StreamResource(Resource):
-    def __init__(
-        self, keycloak_client, simple_dataset_authorizer_client, dataset_client
-    ):
-        self.keycloak_client = keycloak_client
-        self.simple_dataset_authorizer_client = simple_dataset_authorizer_client
-        self.event_stream_service = EventStreamService(dataset_client)
+    def __init__(self):
+        self.event_stream_service = EventStreamService(current_app.dataset_client)
 
     @requires_auth
     @requires_dataset_ownership

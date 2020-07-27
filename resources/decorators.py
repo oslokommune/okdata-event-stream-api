@@ -1,6 +1,6 @@
 import re
 from functools import wraps
-from flask import g, request, make_response
+from flask import g, request, make_response, current_app
 
 
 def requires_auth(method):
@@ -21,7 +21,7 @@ def requires_auth(method):
         else:
             return make_response({"message": "Missing authorization header"}, 400)
 
-        introspected = self.keycloak_client.introspect(bearer_token)
+        introspected = current_app.keycloak_client.introspect(bearer_token)
         if introspected["active"]:
             g.principal_id = introspected["username"]
             g.bearer_token = bearer_token
@@ -35,7 +35,7 @@ def requires_auth(method):
 def requires_dataset_ownership(method):
     @wraps(method)
     def decorated_function(self, dataset_id, **kwargs):
-        dataset_access = self.simple_dataset_authorizer_client.check_dataset_access(
+        dataset_access = current_app.simple_dataset_authorizer_client.check_dataset_access(
             dataset_id, bearer_token=g.bearer_token
         )
 
