@@ -1,13 +1,12 @@
 from flask_restful import abort
 
 from resources import Resource
+from resources.authorizer import auth
 
 
 class SubscribableResource(Resource):
-    def __init__(self, keycloak_client, simple_dataset_authorizer_client):
-        self.keycloak_client = keycloak_client
-        self.simple_dataset_authorizer_client = simple_dataset_authorizer_client
-
+    @auth.accepts_token
+    @auth.requires_dataset_ownership
     def get(self, dataset_id, version):
         return {"enabled": True, "cf_status": "active"}
 
