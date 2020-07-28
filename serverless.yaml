@@ -34,6 +34,10 @@ functions:
     events:
       - http: ANY /
       - http: 'ANY {proxy+}'
+  update_cf_status:
+    handler: notifications.sns_handler.handle
+    events:
+      - sns: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:event-stream-api-cloudformation-events"
 
 plugins:
   - serverless-wsgi

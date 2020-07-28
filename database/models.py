@@ -3,6 +3,7 @@ from datetime import datetime
 from shortuuid import ShortUUID
 from pydantic import BaseModel, Field, validator
 from typing import Dict
+from enum import Enum
 
 # from pydantic.generics import GenericModel
 
@@ -60,6 +61,7 @@ class Sink(Stack):
 
 class EventStream(Stack):
     id: str
+    config_version: int = 1
     create_raw: bool
     updated_by: str
     updated_at: datetime = Field(
@@ -76,4 +78,10 @@ class EventStream(Stack):
     @property
     def cf_stack_name(self):
         [dataset_id, version] = self.id.split("/")
-        return f"stream-manager-{dataset_id}-{version}"
+        return f"{CfStackType.EVENT_STREAM.value}-{dataset_id}-{version}"
+
+
+class CfStackType(Enum):
+    EVENT_STREAM = "event-stream"
+    SUBSCRIBABLE = "event-subscribable"
+    SINK = "event-sink"
