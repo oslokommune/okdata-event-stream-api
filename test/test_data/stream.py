@@ -97,7 +97,6 @@ event_stream = EventStream(
         "updated_by": "larsmonsen",
         "updated_at": "2020-01-21T09:28:57.831435",
         "deleted": False,
-        "subscribable": None,
         "sinks": [],
     }
 )
