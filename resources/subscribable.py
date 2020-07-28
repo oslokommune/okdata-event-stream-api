@@ -1,10 +1,11 @@
 from flask_restful import abort
 
-from resources import Resource, requires_auth
+from clients.auth import auth
+from resources import Resource
 
 
 class SubscribableResource(Resource):
-    @requires_auth
+    @auth.accept_token
     def get(self, dataset_id, version):
         return {"enabled": True, "cf_status": "active"}
 
