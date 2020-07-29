@@ -41,16 +41,26 @@ class StackTemplate(BaseStackModel):
 
 
 class Stack(BaseModel):
-    cf_stack_template: StackTemplate
-    cf_status: str = "INACTIVE"
+    cf_stack_template: StackTemplate = None
+    cf_status: str = Field("INACTIVE", max_length=20)
 
     @validator("cf_status", allow_reuse=True)
     def make_uppercase(cls, v):
         return v.upper()
 
+    # TODO: Ensure that template is set on status change?
+    # @validator("cf_status", allow_reuse=True)
+    # def ensure_template(cls, v, values):
+    #     if v != "INACTIVE" and not values["cf_stack_template"]:
+    #         raise ValueError('template must be set')
+    #     return v
+
+    class Config:
+        validate_assignment = True
+
 
 class Subscribable(Stack):
-    enabled: bool
+    enabled: bool = False
 
 
 class Sink(Stack):
@@ -68,7 +78,7 @@ class EventStream(Stack):
         default_factory=datetime.utcnow, str=datetime.isoformat
     )
     deleted: bool = False
-    subscribable: Subscribable = None
+    subscribable: Subscribable = Field(default_factory=Subscribable)
     sinks: List[Sink] = list()
 
     @property
