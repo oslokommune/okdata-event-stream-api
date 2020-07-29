@@ -17,7 +17,7 @@ def create_event_streams_table(item_list=[], region="eu-west-1"):
         ],
         AttributeDefinitions=[
             {"AttributeName": "id", "AttributeType": "S"},
-            {"AttributeName": "config_version", "AttributeType": "S"},
+            {"AttributeName": "config_version", "AttributeType": "N"},
         ],
         ProvisionedThroughput={"ReadCapacityUnits": 1, "WriteCapacityUnits": 1},
         GlobalSecondaryIndexes=[

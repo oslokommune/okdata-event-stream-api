@@ -4,6 +4,7 @@ from freezegun import freeze_time
 from origo.data.dataset import Dataset
 from services import EventStreamService, ResourceConflict
 from services.stream import generate_event_stream_cf_template
+import services.stream as stream
 from clients import setup_origo_sdk
 
 import test.test_data.stream as test_data
@@ -15,6 +16,8 @@ dataset_id = test_data.dataset_id
 version = test_data.version
 confidentiality = test_data.confidentiality
 updated_by = test_data.updated_by
+
+stream.create_pipeline_triggers = True
 
 
 @freeze_time(test_data.utc_now)

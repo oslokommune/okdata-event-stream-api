@@ -9,7 +9,7 @@ class CloudformationClient:
         region = os.environ["AWS_REGION"]
         self.client = boto3.client("cloudformation", region_name=region)
         self.sns_topic_arn = (
-            f"arn:aws:sns:{region}:{account_id}:stream-manager-cloudformation-events"
+            f"arn:aws:sns:{region}:{account_id}:event-stream-api-cloudformation-events"
         )
 
     def create_stack(self, name, template, tags):

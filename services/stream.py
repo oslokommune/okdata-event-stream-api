@@ -8,6 +8,9 @@ from services import ResourceConflict
 
 pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route"
 
+# TODO: Enable/remove flag when https://jira.oslo.kommune.no/browse/DP-964 is done
+create_pipeline_triggers = False
+
 
 class EventStreamService:
     def __init__(self, dataset_client: Dataset):
@@ -58,9 +61,10 @@ def generate_event_stream_cf_template(
             f"dp.{dataset_confidentiality}.{dataset_id}.raw.{version}.json"
         )
         resources["RawDataStream"] = data_stream_resource(raw_stream_name, updated_by)
-        resources["RawPipelineTrigger"] = pipeline_trigger_resource(
-            raw_stream_name, updated_by
-        )
+        if create_pipeline_triggers:
+            resources["RawPipelineTrigger"] = pipeline_trigger_resource(
+                raw_stream_name, updated_by
+            )
 
     processed_stream_name = (
         f"dp.{dataset_confidentiality}.{dataset_id}.processed.{version}.json"
@@ -68,9 +72,10 @@ def generate_event_stream_cf_template(
     resources["ProcessedDataStream"] = data_stream_resource(
         processed_stream_name, updated_by
     )
-    resources["ProcessedPipelineTrigger"] = pipeline_trigger_resource(
-        processed_stream_name, updated_by
-    )
+    if create_pipeline_triggers:
+        resources["ProcessedPipelineTrigger"] = pipeline_trigger_resource(
+            processed_stream_name, updated_by
+        )
 
     return StackTemplate(
         **{
