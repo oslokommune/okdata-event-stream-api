@@ -47,17 +47,15 @@ def test_get_404_resource_not_found(
 
 
 @pytest.fixture()
-def mock_subscribable_service(monkeypatch, mocker):
+def mock_subscribable_service(monkeypatch):
     def get_subscribable(self, dataset_id, version):
         return test_data.subscribable_event_stream.subscribable
 
     monkeypatch.setattr(SubscribableService, "get_subscribable", get_subscribable)
 
-    mocker.spy(SubscribableService, "get_subscribable")
-
 
 @pytest.fixture()
-def mock_subscribable_service_resource_not_found(monkeypatch, mocker):
+def mock_subscribable_service_resource_not_found(monkeypatch):
     def get_subscribable(self, dataset_id, version):
         raise ResourceNotFound
 

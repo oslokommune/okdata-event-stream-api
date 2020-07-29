@@ -17,7 +17,7 @@ subscribable_cf_template = {
                 "Enabled": True,
                 "EventSourceArn": {
                     "Fn::Sub": "arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/"
-                    + f"dp.{confidentiality}.{dataset_id}.incoming.{version}.json"
+                    + f"dp.{confidentiality}.{dataset_id}.processed.{version}.json"
                 },
                 "FunctionName": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:event-data-subscription-dev-publish_event",
                 "StartingPosition": "LATEST",
