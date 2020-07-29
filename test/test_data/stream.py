@@ -98,6 +98,11 @@ event_stream = EventStream(
         "updated_at": "2020-01-21T09:28:57.831435",
         "deleted": False,
         "sinks": [],
+        "subscribable": {
+            "cf_stack_template": None,
+            "cf_status": "INACTIVE",
+            "enabled": False,
+        },
     }
 )
 
