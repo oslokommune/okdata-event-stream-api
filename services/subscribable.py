@@ -34,8 +34,6 @@ class SubscribableService:
 
         if not event_stream or event_stream.deleted:
             raise ResourceNotFound
-        # if not event_stream.is_active:
-        #     raise ResourceUnprocessable
         if event_stream.subscribable.enabled:
             raise ResourceConflict
 

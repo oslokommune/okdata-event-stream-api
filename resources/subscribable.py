@@ -8,8 +8,7 @@ from resources.authorizer import auth
 from services import (
     SubscribableService,
     ResourceNotFound,
-    ResourceConflict,
-    # ResourceUnprocessable,
+    ResourceConflict
 )
 
 
