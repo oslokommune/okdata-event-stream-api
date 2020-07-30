@@ -1,4 +1,10 @@
-from .models import EventStream, StackTemplate, CfStackType
+from .models import EventStream, Subscribable, StackTemplate, CfStackType
 from .db import EventStreamsTable
 
-__all__ = ["EventStream", "StackTemplate", "EventStreamsTable", "CfStackType"]
+__all__ = [
+    "EventStream",
+    "Subscribable",
+    "StackTemplate",
+    "EventStreamsTable",
+    "CfStackType",
+]
