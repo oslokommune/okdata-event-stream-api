@@ -71,7 +71,8 @@ class SubscribableService:
         if not event_stream.subscribable.enabled:
             raise ResourceConflict
 
-        event_stream.subscribable = Subscribable(cf_status="DELETE_IN_PROGRESS")
+        event_stream.subscribable.cf_status = "DELETE_IN_PROGRESS"
+        event_stream.subscribable.enabled = False
         event_stream.config_version += 1
         event_stream.updated_by = updated_by
         event_stream.updated_at = datetime.utcnow()
