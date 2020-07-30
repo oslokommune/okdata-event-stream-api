@@ -20,3 +20,6 @@ class CloudformationClient:
             NotificationARNs=[self.sns_topic_arn],
             Tags=tags,
         )
+
+    def delete_stack(self, name):
+        self.client.delete_stack(StackName=name)

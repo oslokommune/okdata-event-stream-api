@@ -1,9 +1,8 @@
 import os
-import datetime
 from origo.data.dataset import Dataset
 from database import EventStreamsTable, EventStream, StackTemplate
 from clients import CloudformationClient
-from services import ResourceConflict
+from services import ResourceConflict, ResourceNotFound, datetime_utils
 
 
 pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route"
@@ -20,27 +19,39 @@ class EventStreamService:
 
     def create_event_stream(self, dataset_id, version, updated_by, create_raw=True):
         event_stream_id = f"{dataset_id}/{version}"
-        if self.event_streams_table.get_event_stream(event_stream_id):
-            raise ResourceConflict
 
-        event_stream = EventStream(
-            **{
-                "id": event_stream_id,
-                "create_raw": create_raw,
-                "updated_by": updated_by,
-                "updated_at": datetime.datetime.utcnow(),
-                "cf_stack_template": generate_event_stream_cf_template(
-                    dataset_id=dataset_id,
-                    version=version,
-                    dataset_confidentiality=self.dataset_client.get_dataset(dataset_id)[
-                        "confidentiality"
-                    ],
-                    updated_by=updated_by,
-                    create_raw=create_raw,
-                ),
-                "cf_status": "CREATE_IN_PROGRESS",
-            }
+        event_stream = self.event_streams_table.get_event_stream(event_stream_id)
+
+        if event_stream is not None:
+            if not event_stream.deleted:
+                raise ResourceConflict
+
+            event_stream.config_version += 1
+            event_stream.deleted = False
+            event_stream.updated_by = updated_by
+            event_stream.updated_at = datetime_utils.utc_now_with_timezone()
+
+        else:
+            event_stream = EventStream(
+                **{
+                    "id": event_stream_id,
+                    "create_raw": create_raw,
+                    "updated_by": updated_by,
+                    "updated_at": datetime_utils.utc_now_with_timezone(),
+                }
+            )
+
+        event_stream.cf_stack_template = generate_event_stream_cf_template(
+            dataset_id=dataset_id,
+            version=version,
+            dataset_confidentiality=self.dataset_client.get_dataset(dataset_id)[
+                "confidentiality"
+            ],
+            updated_by=updated_by,
+            create_raw=create_raw,
         )
+        event_stream.cf_status = "CREATE_IN_PROGRESS"
+
         self.event_streams_table.put_event_stream(event_stream)
         self.cloudformation_client.create_stack(
             name=event_stream.cf_stack_name,
@@ -48,6 +59,37 @@ class EventStreamService:
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
         return event_stream
+
+    def delete_event_stream(self, dataset_id, version, updated_by):
+        event_stream_id = f"{dataset_id}/{version}"
+
+        event_stream = self.event_streams_table.get_event_stream(event_stream_id)
+
+        if event_stream is None:
+            raise ResourceNotFound
+        if event_stream.deleted:
+            raise ResourceNotFound
+
+        if sub_resources_exist(event_stream):
+            raise ResourceConflict
+
+        event_stream.deleted = True
+        event_stream.config_version += 1
+        event_stream.updated_by = updated_by
+        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
+        event_stream.cf_status = "DELETE_IN_PROGRESS"
+        self.event_streams_table.put_event_stream(event_stream)
+
+        self.cloudformation_client.delete_stack(event_stream.cf_stack_name)
+
+
+def sub_resources_exist(event_stream: EventStream):
+    if event_stream.subscribable.cf_status != "INACTIVE":
+        return True
+    for sink in event_stream.sinks:
+        if sink.cf_status != "INACTIVE":
+            return True
+    return False
 
 
 def generate_event_stream_cf_template(
@@ -62,9 +104,7 @@ def generate_event_stream_cf_template(
         )
         resources["RawDataStream"] = data_stream_resource(raw_stream_name, updated_by)
         if create_pipeline_triggers:
-            resources["RawPipelineTrigger"] = pipeline_trigger_resource(
-                raw_stream_name, updated_by
-            )
+            resources["RawPipelineTrigger"] = pipeline_trigger_resource(raw_stream_name)
 
     processed_stream_name = (
         f"dp.{dataset_confidentiality}.{dataset_id}.processed.{version}.json"
@@ -74,7 +114,7 @@ def generate_event_stream_cf_template(
     )
     if create_pipeline_triggers:
         resources["ProcessedPipelineTrigger"] = pipeline_trigger_resource(
-            processed_stream_name, updated_by
+            processed_stream_name
         )
 
     return StackTemplate(
@@ -96,7 +136,7 @@ def data_stream_resource(stream_name, created_by):
     }
 
 
-def pipeline_trigger_resource(stream_name, created_by):
+def pipeline_trigger_resource(stream_name):
     return {
         "Type": "AWS::Lambda::EventSourceMapping",
         "Properties": {
