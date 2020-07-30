@@ -1,7 +1,7 @@
 import json
 import pytest
-from datetime import datetime
 from freezegun import freeze_time
+import dateutil.parser as date_parser
 
 from origo.data.dataset import Dataset
 
@@ -52,7 +52,7 @@ def test_enable_subscribable(mock_boto, mock_dataset):
     assert updated_event_stream.subscribable.cf_status == "CREATE_IN_PROGRESS"
     assert updated_event_stream.config_version == event_stream.config_version + 1
     assert updated_event_stream.updated_by == test_data.updated_by
-    assert updated_event_stream.updated_at == datetime.utcnow()
+    assert updated_event_stream.updated_at == date_parser.parse(test_data.utc_now)
 
     with pytest.raises(ResourceNotFound):
         subscribable_service.enable_subscribable(
@@ -86,7 +86,7 @@ def test_disable_subscribable(mock_boto, mock_dataset):
     assert updated_event_stream.subscribable.cf_status == "DELETE_IN_PROGRESS"
     assert updated_event_stream.config_version == event_stream.config_version + 1
     assert updated_event_stream.updated_by == test_data.updated_by
-    assert updated_event_stream.updated_at == datetime.utcnow()
+    assert updated_event_stream.updated_at == date_parser.parse(test_data.utc_now)
 
     with pytest.raises(ResourceNotFound):
         subscribable_service.disable_subscribable(

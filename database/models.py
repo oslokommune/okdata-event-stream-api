@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, validator
 from typing import Dict
 from enum import Enum
 
-# from pydantic.generics import GenericModel
+from services import datetime_utils
 
 
 class BaseStackModel(BaseModel):
@@ -75,7 +75,7 @@ class EventStream(Stack):
     create_raw: bool
     updated_by: str
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow, str=datetime.isoformat
+        default_factory=datetime_utils.utc_now_with_timezone, str=datetime.isoformat
     )
     deleted: bool = False
     subscribable: Subscribable = Field(default_factory=Subscribable)

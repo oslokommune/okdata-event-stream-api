@@ -1,10 +1,9 @@
 import os
-from datetime import datetime
 
 from origo.data.dataset import Dataset
 
 from clients import CloudformationClient
-from services import ResourceNotFound, ResourceConflict
+from services import ResourceNotFound, ResourceConflict, datetime_utils
 from database import EventStreamsTable, Subscribable, StackTemplate, CfStackType
 
 
@@ -50,7 +49,7 @@ class SubscribableService:
         )
         event_stream.config_version += 1
         event_stream.updated_by = updated_by
-        event_stream.updated_at = datetime.utcnow()
+        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
 
         self.event_streams_table.put_event_stream(event_stream)
 
@@ -75,7 +74,7 @@ class SubscribableService:
         event_stream.subscribable.enabled = False
         event_stream.config_version += 1
         event_stream.updated_by = updated_by
-        event_stream.updated_at = datetime.utcnow()
+        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
 
         self.event_streams_table.put_event_stream(event_stream)
 
