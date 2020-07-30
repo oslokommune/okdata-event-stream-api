@@ -5,11 +5,7 @@ from flask_restful import abort
 
 from resources import Resource
 from resources.authorizer import auth
-from services import (
-    SubscribableService,
-    ResourceNotFound,
-    ResourceConflict
-)
+from services import SubscribableService, ResourceNotFound, ResourceConflict
 
 
 logger = logging.getLogger()
