@@ -5,7 +5,12 @@ from flask_restful import abort
 
 from resources import Resource
 from resources.authorizer import auth
-from services import SubscribableService, ResourceNotFound, ResourceConflict
+from services import SubscribableService
+from services.exceptions import (
+    ResourceNotFound,
+    ResourceConflict,
+    ParentResourceNotReady,
+)
 
 
 logger = logging.getLogger()
@@ -57,6 +62,10 @@ class SubscribableResource(Resource):
             abort(
                 404,
                 message=f"Event stream with id {dataset_id}/{version} does not exist",
+            )
+        except ParentResourceNotReady:
+            abort(
+                409, message=f"Event stream with id {dataset_id}/{version} is not ready"
             )
         except ResourceConflict:
             subscribable_state = (
