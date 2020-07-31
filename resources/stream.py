@@ -1,6 +1,6 @@
 import logging
 from flask_restful import abort
-from flask import request, make_response, g, jsonify, current_app
+from flask import request, g, current_app
 
 from resources import Resource
 from resources.authorizer import auth
@@ -38,12 +38,12 @@ class StreamResource(Resource):
             )
         except ResourceConflict:
             response_msg = f"Event stream with id {dataset_id}/{version} already exist"
-            return make_response(jsonify({"message": response_msg}), 409)
+            abort(409, message=response_msg)
         except Exception as e:
             logger.exception(e)
-            return make_response(jsonify({"message": "Server error"}), 500)
+            abort(500, message="Server error")
 
-        return make_response(event_stream.json(), 201)
+        return event_stream.json(), 201
 
     @auth.accepts_token
     @auth.requires_dataset_ownership
@@ -53,20 +53,19 @@ class StreamResource(Resource):
             dataset = self.get_dataset(dataset_id)
             event_stream = self.get_event_stream(dataset_id, version)
         except ResourceNotFound as e:
-            return make_response(jsonify({"message": str(e)}), 404)
+            abort(404, message=str(e))
 
-        return make_response(
-            {
-                "id": event_stream.id,
-                "create_raw": event_stream.create_raw,
-                "updated_by": event_stream.updated_by,
-                "updated_at": event_stream.updated_at,
-                "deleted": event_stream.deleted,
-                "cf_status": event_stream.cf_status,
-                "confidentiality": dataset["confidentiality"],
+        return event_stream.copy(
+            include={
+                "id",
+                "create_raw",
+                "updated_by",
+                "updated_at",
+                "deleted",
+                "cf_status",
             },
-            200,
-        )
+            update={"confidentiality": dataset["confidentiality"]},
+        ).json()
 
     def put(self, dataset_id, version):
         abort(501)
@@ -81,19 +80,14 @@ class StreamResource(Resource):
             )
         except ResourceNotFound:
             response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
-            return make_response(jsonify({"message": response_msg}), 404)
+            abort(404, message=response_msg)
 
         # In the future this endpoint will also delete sub-resources. Until then return 409 if subresources exist. Oyvind Nygard 2020-09-30
         except ResourceConflict:
             response_msg = f"Event stream with id {dataset_id}/{version} contains sub-resources. Delete all related event-sinks and disable event subscription"
-            return make_response(jsonify({"message": response_msg}), 409)
+            abort(409, message=response_msg)
         except Exception as e:
             logger.exception(e)
-            return make_response(jsonify({"message": "Server error"}), 500)
+            abort(500, message="Server error")
 
-        return make_response(
-            jsonify(
-                {"message": f"Deleted event stream with id {dataset_id}/{version}"}
-            ),
-            200,
-        )
+        return {"message": f"Deleted event stream with id {dataset_id}/{version}"}
