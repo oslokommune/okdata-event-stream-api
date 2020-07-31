@@ -5,7 +5,8 @@ dataset_id = "some-dataset-id"
 version = "1"
 confidentiality = "green"
 updated_by = "larsmonsen"
-utc_now = "2020-01-21T09:28:57.831435+00:00"
+created_at = "2020-01-21T09:28:57.831435+00:00"
+deleted_at = "2020-02-21T09:28:57.831435+00:00"
 
 processed_and_raw_cf_template = {
     "Description": f"Kinesis streams and pipeline triggers for {dataset_id}/{version}",
@@ -92,16 +93,53 @@ event_stream = EventStream(
     **{
         "cf_stack_template": processed_and_raw_cf_template,
         "cf_status": "CREATE_IN_PROGRESS",
-        "id": "some-dataset-id/1",
+        "id": f"{dataset_id}/{version}",
         "create_raw": True,
         "updated_by": "larsmonsen",
-        "updated_at": "2020-01-21T09:28:57.831435",
+        "updated_at": created_at,
         "deleted": False,
         "sinks": [],
         "subscribable": {
             "cf_stack_template": None,
             "cf_status": "INACTIVE",
             "enabled": False,
+        },
+    }
+)
+
+deleted_event_stream = EventStream(
+    **{
+        "cf_stack_template": processed_and_raw_cf_template,
+        "cf_status": "INACTIVE",
+        "config_version": 2,
+        "id": f"{dataset_id}/{version}",
+        "create_raw": True,
+        "updated_by": "larsmonsen",
+        "updated_at": deleted_at,
+        "deleted": True,
+        "sinks": [],
+        "subscribable": {
+            "cf_stack_template": None,
+            "cf_status": "INACTIVE",
+            "enabled": False,
+        },
+    }
+)
+
+event_stream_with_subresources = EventStream(
+    **{
+        "cf_stack_template": processed_and_raw_cf_template,
+        "cf_status": "CREATE_IN_PROGRESS",
+        "id": f"{dataset_id}/{version}",
+        "create_raw": True,
+        "updated_by": "larsmonsen",
+        "updated_at": created_at,
+        "deleted": False,
+        "sinks": [],
+        "subscribable": {
+            "cf_stack_template": None,
+            "cf_status": "ACTIVE",
+            "enabled": True,
         },
     }
 )

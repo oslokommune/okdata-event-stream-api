@@ -71,5 +71,29 @@ class StreamResource(Resource):
     def put(self, dataset_id, version):
         abort(501)
 
+    @auth.accepts_token
+    @auth.requires_dataset_ownership
     def delete(self, dataset_id, version):
-        abort(501)
+        updated_by = g.principal_id
+        try:
+            self.event_stream_service.delete_event_stream(
+                dataset_id=dataset_id, version=version, updated_by=updated_by
+            )
+        except ResourceNotFound:
+            response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
+            return make_response(jsonify({"message": response_msg}), 404)
+
+        # In the future this endpoint will also delete sub-resources. Until then return 409 if subresources exist. Oyvind Nygard 2020-09-30
+        except ResourceConflict:
+            response_msg = f"Event stream with id {dataset_id}/{version} contains sub-resources. Delete all related event-sinks and disable event subscription"
+            return make_response(jsonify({"message": response_msg}), 409)
+        except Exception as e:
+            logger.exception(e)
+            return make_response(jsonify({"message": "Server error"}), 500)
+
+        return make_response(
+            jsonify(
+                {"message": f"Deleted event stream with id {dataset_id}/{version}"}
+            ),
+            200,
+        )
