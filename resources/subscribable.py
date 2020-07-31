@@ -1,5 +1,5 @@
 import logging
-from flask import request, g, current_app, make_response
+from flask import request, g, current_app
 from flask_restful import abort
 
 
@@ -36,7 +36,7 @@ class SubscribableResource(Resource):
             logger.exception(e)
             abort(500, message="Server error")
 
-        return make_response(subscribable.json(exclude={"cf_stack_template"}), 200)
+        return subscribable.json(exclude={"cf_stack_template"})
 
     @auth.accepts_token
     @auth.requires_dataset_ownership
@@ -79,4 +79,4 @@ class SubscribableResource(Resource):
             logger.exception(e)
             abort(500, message="Server error")
 
-        return make_response(subscribable.json(exclude={"cf_stack_template"}), 200)
+        return subscribable.json(exclude={"cf_stack_template"})

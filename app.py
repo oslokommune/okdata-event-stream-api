@@ -1,9 +1,9 @@
 from flask import Flask
-from flask_restful import Api
 
 from origo.data.dataset import Dataset
 
 from clients import setup_origo_sdk
+from resources.api import Api
 from resources.routes import initialize_routes
 from resources.authorizer import auth
 
