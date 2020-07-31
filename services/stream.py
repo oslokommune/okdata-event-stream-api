@@ -17,10 +17,12 @@ class EventStreamService:
         self.cloudformation_client = CloudformationClient()
         self.event_streams_table = EventStreamsTable()
 
-    def create_event_stream(self, dataset_id, version, updated_by, create_raw=True):
+    def get_event_stream(self, dataset_id, version):
         event_stream_id = f"{dataset_id}/{version}"
+        return self.event_streams_table.get_event_stream(event_stream_id)
 
-        event_stream = self.event_streams_table.get_event_stream(event_stream_id)
+    def create_event_stream(self, dataset_id, version, updated_by, create_raw=True):
+        event_stream = self.get_event_stream(dataset_id, version)
 
         if event_stream is not None:
             if not event_stream.deleted:
@@ -32,6 +34,7 @@ class EventStreamService:
             event_stream.updated_at = datetime_utils.utc_now_with_timezone()
 
         else:
+            event_stream_id = f"{dataset_id}/{version}"
             event_stream = EventStream(
                 **{
                     "id": event_stream_id,
@@ -61,9 +64,7 @@ class EventStreamService:
         return event_stream
 
     def delete_event_stream(self, dataset_id, version, updated_by):
-        event_stream_id = f"{dataset_id}/{version}"
-
-        event_stream = self.event_streams_table.get_event_stream(event_stream_id)
+        event_stream = self.get_event_stream(dataset_id, version)
 
         if event_stream is None:
             raise ResourceNotFound

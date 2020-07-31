@@ -14,6 +14,14 @@ class StreamResource(Resource):
     def __init__(self):
         self.event_stream_service = EventStreamService(current_app.dataset_client)
 
+    def get_event_stream(self, dataset_id, version):
+        event_stream = self.event_stream_service.get_event_stream(dataset_id, version)
+        if event_stream is None:
+            message = f"Could not find stream: {dataset_id}/{version}"
+            logger.info(message)
+            raise ResourceNotFound(message)
+        return event_stream
+
     @auth.accepts_token
     @auth.requires_dataset_ownership
     def post(self, dataset_id, version):
@@ -38,23 +46,24 @@ class StreamResource(Resource):
         return make_response(event_stream.json(), 201)
 
     @auth.accepts_token
-    # @auth.requires_dataset_ownership
-    # @requires_dataset_version_exists
+    @auth.requires_dataset_ownership
+    @auth.requires_dataset_version_exists
     def get(self, dataset_id, version):
-        # TODO: Use decorators or "mixin" functions?
+        try:
+            dataset = self.get_dataset(dataset_id)
+            event_stream = self.get_event_stream(dataset_id, version)
+        except ResourceNotFound as e:
+            return make_response(jsonify({"message": str(e)}), 404)
 
-        # dataset = self.get_dataset_or_404(dataset_id, version)
-        # if not dataset.is_owner(g.principal_id):
-        #     abort(403, message="Forbidden")
-        # event_stream = self.get_event_stream_or_404(dataset_id, version)
         return make_response(
             {
-                "id": f"{dataset_id}/{version}",
-                "create_raw": True,
-                "updated_by": g.principal_id,
-                "updated_at": "2020-06-23",
-                "deleted": False,
-                "cf_status": "active",
+                "id": event_stream.id,
+                "create_raw": event_stream.create_raw,
+                "updated_by": event_stream.updated_by,
+                "updated_at": event_stream.updated_at,
+                "deleted": event_stream.deleted,
+                "cf_status": event_stream.cf_status,
+                "confidentiality": dataset["confidentiality"],
             },
             200,
         )
