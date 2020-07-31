@@ -44,6 +44,10 @@ class Stack(BaseModel):
     cf_stack_template: StackTemplate = None
     cf_status: str = Field("INACTIVE", max_length=20)
 
+    @property
+    def is_active(self):
+        return self.cf_status == "ACTIVE"
+
     @validator("cf_status", allow_reuse=True)
     def make_uppercase(cls, v):
         return v.upper()
@@ -80,10 +84,6 @@ class EventStream(Stack):
     deleted: bool = False
     subscribable: Subscribable = Field(default_factory=Subscribable)
     sinks: List[Sink] = list()
-
-    @property
-    def is_active(self):
-        return self.cf_status == "ACTIVE"
 
     @property
     def cf_stack_name(self):

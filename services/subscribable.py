@@ -3,7 +3,12 @@ import os
 from origo.data.dataset import Dataset
 
 from clients import CloudformationClient
-from services import ResourceNotFound, ResourceConflict, datetime_utils
+from services import datetime_utils
+from services.exceptions import (
+    ResourceNotFound,
+    ParentResourceNotReady,
+    ResourceConflict,
+)
 from database import EventStreamsTable, Subscribable, StackTemplate, CfStackType
 
 
@@ -33,6 +38,8 @@ class SubscribableService:
 
         if not event_stream or event_stream.deleted:
             raise ResourceNotFound
+        if not event_stream.is_active:
+            raise ParentResourceNotReady
         if event_stream.subscribable.enabled:
             raise ResourceConflict
 

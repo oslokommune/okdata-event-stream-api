@@ -6,7 +6,12 @@ import dateutil.parser as date_parser
 from origo.data.dataset import Dataset
 
 from clients import setup_origo_sdk
-from services import SubscribableService, ResourceNotFound, ResourceConflict
+from services import SubscribableService
+from services.exceptions import (
+    ResourceNotFound,
+    ParentResourceNotReady,
+    ResourceConflict,
+)
 from services.subscribable import generate_subscribable_cf_template
 
 from test import test_utils
@@ -60,6 +65,21 @@ def test_enable_subscribable(mock_boto, mock_dataset):
         )
 
     with pytest.raises(ResourceConflict):
+        subscribable_service.enable_subscribable(
+            test_data.dataset_id, test_data.version, test_data.updated_by
+        )
+
+
+@freeze_time(test_data.utc_now)
+def test_enable_subscribable_parent_not_ready(mock_boto, mock_dataset):
+    event_stream = test_data.event_stream_not_ready
+    test_utils.create_event_streams_table(item_list=[json.loads(event_stream.json())])
+
+    subscribable_service = SubscribableService(
+        setup_origo_sdk(test_data.ssm_parameters, Dataset)
+    )
+
+    with pytest.raises(ParentResourceNotReady):
         subscribable_service.enable_subscribable(
             test_data.dataset_id, test_data.version, test_data.updated_by
         )

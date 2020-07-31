@@ -2,7 +2,12 @@ import json
 import pytest
 from unittest.mock import ANY
 
-from services import SubscribableService, ResourceNotFound, ResourceConflict
+from services import SubscribableService
+from services.exceptions import (
+    ResourceNotFound,
+    ResourceConflict,
+    ParentResourceNotReady,
+)
 
 import test.test_data.subscribable as test_data
 from .conftest import valid_token, valid_token_no_access, username
@@ -166,6 +171,23 @@ def test_put_409_resource_conflict(
     }
 
 
+def test_put_409_parent_not_ready_conflict(
+    mock_client,
+    mock_subscribable_service_parent_not_ready_conflict,
+    mock_keycloak,
+    mock_authorizer,
+):
+    response = mock_client.put(
+        f"/{dataset_id}/{version}/subscribable",
+        headers=auth_header,
+        json={"enabled": True},
+    )
+    assert response.status_code == 409
+    assert json.loads(response.data) == {
+        "message": f"Event stream with id {dataset_id}/{version} is not ready"
+    }
+
+
 @pytest.fixture()
 def mock_subscribable_service(monkeypatch, mocker):
     def get_subscribable(self, dataset_id, version):
@@ -204,6 +226,14 @@ def mock_subscribable_service_resource_conflict(monkeypatch):
 
     monkeypatch.setattr(SubscribableService, "enable_subscribable", raise_conflict)
     monkeypatch.setattr(SubscribableService, "disable_subscribable", raise_conflict)
+
+
+@pytest.fixture()
+def mock_subscribable_service_parent_not_ready_conflict(monkeypatch):
+    def raise_conflict(self, *args, **kwargs):
+        raise ParentResourceNotReady
+
+    monkeypatch.setattr(SubscribableService, "enable_subscribable", raise_conflict)
 
 
 @pytest.fixture()
