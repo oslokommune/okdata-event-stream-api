@@ -18,11 +18,15 @@ class EventStreamService:
         self.cloudformation_client = CloudformationClient()
         self.event_streams_table = EventStreamsTable()
 
-    def create_event_stream(self, dataset_id, version, updated_by, create_raw=True):
+    def get_event_stream(self, dataset_id, version):
         event_stream_id = f"{dataset_id}/{version}"
-        if self.event_streams_table.get_event_stream(event_stream_id):
+        return self.event_streams_table.get_event_stream(event_stream_id)
+
+    def create_event_stream(self, dataset_id, version, updated_by, create_raw=True):
+        if self.get_event_stream(dataset_id, version):
             raise ResourceConflict
 
+        event_stream_id = f"{dataset_id}/{version}"
         event_stream = EventStream(
             **{
                 "id": event_stream_id,

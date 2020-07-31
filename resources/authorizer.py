@@ -1,5 +1,5 @@
 import re
-from flask import g, request, make_response
+from flask import g, request, make_response, current_app
 from functools import wraps
 
 from origo.dataset_authorizer.simple_dataset_authorizer_client import (
@@ -67,6 +67,22 @@ class Authorizer(object):
                 return view_func(resource, **kwargs)
             else:
                 return make_response({"message": "Forbidden"}, 403)
+
+        return decorated
+
+    def requires_dataset_version_exists(self, view_func):
+        @wraps(view_func)
+        def decorated(resource, **kwargs):
+            versions = current_app.dataset_client.get_versions(kwargs["dataset_id"])
+            for version in versions:
+                if version["version"] == kwargs["version"]:
+                    return view_func(resource, **kwargs)
+            return make_response(
+                {
+                    "message": f"Version: {kwargs['version']} for dataset '{kwargs['dataset_id']}' not found"
+                },
+                404,
+            )
 
         return decorated
 
