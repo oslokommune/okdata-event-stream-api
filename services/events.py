@@ -21,5 +21,4 @@ class ElasticsearchDataService:
         if not response:
             logger.warning("Could not get a response from ES")
             return None
-        sourcelist = [e.to_dict() for e in s]
-        return json.dumps(sourcelist)
+        return [e.to_dict() for e in s]

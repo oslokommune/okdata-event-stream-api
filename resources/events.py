@@ -1,11 +1,11 @@
 import logging
+import json
 from flask_restful import Resource, abort, reqparse
 from datetime import datetime
 
 from services import ElasticsearchDataService
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 
 # Gets resources from Flask-endpoint, returns events based on provided dates
@@ -36,5 +36,4 @@ class StreamEventResource(Resource):
         data = event_history.get_event_by_date(dataset_id, version, from_date, to_date)
         if not data:
             abort(400, message="No event found for provided id")
-        logger.warning("Returning data")
-        return data
+        return json.dumps(data)
