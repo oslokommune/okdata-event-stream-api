@@ -1,4 +1,10 @@
-from resources import StreamResource, SubscribableResource, SinkResource, SinksResource
+from resources import (
+    StreamResource,
+    SubscribableResource,
+    SinkResource,
+    SinksResource,
+    StreamEventResource,
+)
 
 
 def initialize_routes(api):
@@ -13,4 +19,7 @@ def initialize_routes(api):
     )
     api.add_resource(
         SubscribableResource, "/<string:dataset_id>/<string:version>/subscribable"
+    )
+    api.add_resource(
+        StreamEventResource, "/<string:dataset_id>/<string:version>/events",
     )
