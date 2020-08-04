@@ -3,7 +3,6 @@ from database import ElasticsearchConnection
 from elasticsearch_dsl import Search
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 
 class ElasticsearchDataService:
