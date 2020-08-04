@@ -12,10 +12,10 @@ logger = logging.getLogger()
 class StreamEventResource(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-
-    def get(self, dataset_id, version):
         self.parser.add_argument("from_date", type=str)
         self.parser.add_argument("to_date", type=str)
+
+    def get(self, dataset_id, version):
         args = self.parser.parse_args()
         try:
             from_date = datetime.fromisoformat(args["from_date"])

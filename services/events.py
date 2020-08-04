@@ -1,5 +1,4 @@
 import logging
-import json
 from database import ElasticsearchConnection
 from elasticsearch_dsl import Search
 

@@ -4,7 +4,6 @@
 #
 #    pip-compile --extra-index-url=***REMOVED***
 #
---extra-index-url ***REMOVED***
 
 aniso8601==8.0.0          # via flask-restful
 attrs==19.3.0             # via jsonschema
