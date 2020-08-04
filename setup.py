@@ -23,5 +23,6 @@ setup(
         "pydantic==1.5.1",
         "origo-sdk-python==0.2.3",
         "shortuuid",
+        "elasticsearch-dsl==7.2.1",
     ],
 )
