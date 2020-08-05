@@ -3,18 +3,22 @@ import json
 from flask_restful import Resource, abort, reqparse
 from datetime import datetime
 
+from resources.authorizer import auth
 from services import ElasticsearchDataService
 
 logger = logging.getLogger()
 
 
-# Gets resources from Flask-endpoint, returns events based on provided dates
+# Returns events based on provided dates
 class StreamEventResource(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from_date", type=str)
         self.parser.add_argument("to_date", type=str)
 
+    @auth.accepts_token
+    @auth.requires_dataset_ownership
+    @auth.requires_dataset_version_exists
     def get(self, dataset_id, version):
         args = self.parser.parse_args()
         try:
@@ -35,5 +39,5 @@ class StreamEventResource(Resource):
         event_history = ElasticsearchDataService()
         data = event_history.get_event_by_date(dataset_id, version, from_date, to_date)
         if not data:
-            abort(400, message="No event found for provided id")
+            abort(400, message=f"Could not found event: {dataset_id}/{version}")
         return json.dumps(data)
