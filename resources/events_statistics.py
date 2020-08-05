@@ -9,18 +9,23 @@ from services import ElasticsearchDataService
 logger = logging.getLogger()
 
 
-# Returns events based on provided dates
-class StreamEventResource(Resource):
+# Returns the countnumber based on provided dates
+class StreamStatisticsResource(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from_date", type=str)
         self.parser.add_argument("to_date", type=str)
+        self.parser.add_argument("type", type=str)
 
     @auth.accepts_token
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
     def get(self, dataset_id, version):
         args = self.parser.parse_args()
+        type = "count"
+        valid_types = ["count"]
+        if args["type"] and args["type"] in valid_types:
+            type = args["type"]
         try:
             from_date = datetime.fromisoformat(args["from_date"])
             to_date = datetime.fromisoformat(args["to_date"])
@@ -34,10 +39,13 @@ class StreamEventResource(Resource):
             abort(400, message="No date provided")
 
         logger.info(
-            f"Getting history about event with id: {dataset_id}-{version} from {from_date} to {to_date}"
+            f"Getting count event with id: {dataset_id}-{version} from {from_date} to {to_date}"
         )
         event_history = ElasticsearchDataService()
-        data = event_history.get_event_by_date(dataset_id, version, from_date, to_date)
+        if type == "count":
+            data = event_history.get_event_count(
+                dataset_id, version, from_date, to_date
+            )
         if not data:
             abort(400, message=f"Could not find event: {dataset_id}/{version}")
         return json.dumps(data)

@@ -4,6 +4,7 @@ from resources import (
     SinkResource,
     SinksResource,
     StreamEventResource,
+    StreamStatisticsResource,
 )
 
 
@@ -22,4 +23,8 @@ def initialize_routes(api):
     )
     api.add_resource(
         StreamEventResource, "/<string:dataset_id>/<string:version>/events",
+    )
+    api.add_resource(
+        StreamStatisticsResource,
+        "/<string:dataset_id>/<string:version>/events/statistics",
     )
