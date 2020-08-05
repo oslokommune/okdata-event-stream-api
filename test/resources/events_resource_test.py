@@ -50,7 +50,7 @@ class TestGetEvent:
         response_data = response.get_json()
         assert response.status_code == 400
         assert (
-            response_data["message"] == f"Could not found event: {dataset_id}/{version}"
+            response_data["message"] == f"Could not find event: {dataset_id}/{version}"
         )
 
 

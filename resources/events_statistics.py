@@ -39,5 +39,5 @@ class StreamStatisticsResource(Resource):
         event_history = ElasticsearchDataService()
         data = event_history.get_event_count(dataset_id, version, from_date, to_date)
         if not data:
-            abort(400, message=f"Could not found event: {dataset_id}/{version}")
+            abort(400, message=f"Could not find event: {dataset_id}/{version}")
         return json.dumps(data)
