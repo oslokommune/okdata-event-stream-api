@@ -1,5 +1,6 @@
 import pytest
 from keycloak import KeycloakOpenID
+from origo.data.dataset import Dataset
 from origo.dataset_authorizer.simple_dataset_authorizer_client import (
     SimpleDatasetAuthorizerClient,
 )
@@ -80,3 +81,11 @@ def mock_keycloak(monkeypatch):
             return {"active": False, "username": username}
 
     monkeypatch.setattr(KeycloakOpenID, "introspect", introspect)
+
+
+@pytest.fixture()
+def mock_dataset_versions(monkeypatch):
+    def get_versions(self, dataset_id):
+        return [{"id": "my-test-dataset/1", "version": "1"}]
+
+    monkeypatch.setattr(Dataset, "get_versions", get_versions)

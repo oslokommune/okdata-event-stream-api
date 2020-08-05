@@ -285,14 +285,6 @@ def mock_event_stream_service_server_error(monkeypatch):
 
 ### Fixtures for TestGetStreamResource ###
 @pytest.fixture()
-def mock_dataset_versions(monkeypatch):
-    def get_versions(self, dataset_id):
-        return [{"id": "my-test-dataset/1", "version": "1"}]
-
-    monkeypatch.setattr(Dataset, "get_versions", get_versions)
-
-
-@pytest.fixture()
 def mock_event_get_stream_no_stream(monkeypatch):
     def get_event_stream(self, dataset_id, version):
         return None
