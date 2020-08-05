@@ -25,5 +25,6 @@ def initialize_routes(api):
         StreamEventResource, "/<string:dataset_id>/<string:version>/events",
     )
     api.add_resource(
-        StreamStatisticsResource, "/<string:dataset_id>/<string:version>/events/count",
+        StreamStatisticsResource,
+        "/<string:dataset_id>/<string:version>/events/statistics",
     )

@@ -29,7 +29,7 @@ class TestStatistics:
         mock_dataset_versions,
     ):
         response = mock_client.get(
-            f"/{dataset_id}/{version}/events/count?from_date={from_date}&to_date={to_date}",
+            f"/{dataset_id}/{version}/events/statistics?from_date={from_date}&to_date={to_date}",
             headers=auth_header,
         )
         response_data = response.get_json()
@@ -45,7 +45,7 @@ class TestStatistics:
         mock_dataset_versions,
     ):
         response = mock_client.get(
-            f"/{dataset_id}/{version}/events/count", headers=auth_header
+            f"/{dataset_id}/{version}/events/statistics", headers=auth_header
         )
         response_data = response.get_json()
         assert response.status_code == 400
