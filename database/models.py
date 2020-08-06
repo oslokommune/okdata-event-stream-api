@@ -69,8 +69,13 @@ class Subscribable(Stack):
 
 class Sink(Stack):
     type: str
-    config: dict
+    config: dict = {}
     id: str = Field(default_factory=lambda: ShortUUID().random(length=5))
+
+
+class SinkType(Enum):
+    S3 = "s3"
+    ELASTICSEARCH = "elasticsearch"
 
 
 class EventStream(Stack):

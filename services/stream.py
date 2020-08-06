@@ -3,7 +3,7 @@ from origo.data.dataset import Dataset
 from database import EventStreamsTable, EventStream, StackTemplate
 from clients import CloudformationClient
 from services import ResourceConflict, ResourceNotFound, datetime_utils
-
+from services.sink import EventStreamSinkTemplate
 
 pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route"
 
@@ -62,6 +62,26 @@ class EventStreamService:
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
         return event_stream
+
+    def add_sink(self, event_stream, dataset_id, version, sink, updated_by):
+        dataset = self.dataset_client.get_dataset(dataset_id)
+        sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
+        sink.cf_stack_template = sink_template.generate_stack_template()
+        sink.cf_status = "CREATE_IN_PROGRESS"
+        event_stream.sinks.append(sink)
+        self.cloudformation_client.create_stack(
+            name=f"{event_stream.cf_stack_name}-sink-{sink.type}",
+            template=sink.cf_stack_template.json(),
+            tags=[{"Key": "created_by", "Value": updated_by}],
+        )
+        self.update_event_stream(event_stream, updated_by)
+        return event_stream
+
+    def update_event_stream(self, event_stream: EventStream, updated_by: str):
+        event_stream.config_version += 1
+        event_stream.updated_by = updated_by
+        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
+        self.event_streams_table.put_event_stream(event_stream)
 
     def delete_event_stream(self, dataset_id, version, updated_by):
         event_stream = self.get_event_stream(dataset_id, version)
