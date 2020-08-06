@@ -97,7 +97,6 @@ class EventStreamService:
         event_stream.deleted = True
         event_stream.cf_status = "DELETE_IN_PROGRESS"
         self.update_event_stream(event_stream, updated_by)
-        self.event_streams_table.put_event_stream(event_stream)
 
         self.cloudformation_client.delete_stack(event_stream.cf_stack_name)
 
