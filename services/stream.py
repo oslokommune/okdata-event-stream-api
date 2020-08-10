@@ -69,8 +69,9 @@ class EventStreamService:
         sink.cf_stack_template = sink_template.generate_stack_template()
         sink.cf_status = "CREATE_IN_PROGRESS"
         event_stream.sinks.append(sink)
+        name = f"event-sink-{dataset_id}-{version}-{sink.id}"
         self.cloudformation_client.create_stack(
-            name=f"{event_stream.cf_stack_name}-sink-{sink.type}",
+            name=name,
             template=sink.cf_stack_template.json(),
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
