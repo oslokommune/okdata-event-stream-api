@@ -25,7 +25,10 @@ class StreamResource(Resource):
     @auth.accepts_token
     @auth.requires_dataset_ownership
     def post(self, dataset_id, version):
-        """ Create Kinesis event stream """
+        """
+        Create Kinesis event stream:
+            curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{"type":"s3"}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}
+        """
         request_body = request.get_json()
         create_raw = request_body.get("create_raw", True) if request_body else True
         updated_by = g.principal_id

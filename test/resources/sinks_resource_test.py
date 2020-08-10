@@ -101,7 +101,7 @@ class TestPostStreamSinkResource:
             f"/{dataset_id}/{version}/sinks", json={"type": "s3"}, headers=auth_header,
         )
         data = json.loads(response.data)
-        assert response.status_code == 400
+        assert response.status_code == 409
         assert data["message"] == "Sink: s3 already exists on my-test-dataset"
 
 

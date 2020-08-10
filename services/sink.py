@@ -30,37 +30,62 @@ class EventStreamSinkTemplate:
         )
 
     def firehose_s3(self) -> dict:
-        kinesis_source_stream_name = f"dp.{self.dataset['confidentiality']}.{self.dataset['Id']}.processed.{self.version}.json"
+        return {
+            "SinkS3Resource": {
+                "Type": "AWS::KinesisFirehose::DeliveryStream",
+                "Properties": self.firehose_s3_delivery_stream(),
+            },
+            "SinkS3ResourceIAM": {
+                "Type": "AWS::IAM::Role",
+                "Properties": self.firehose_s3_iam(),
+            },
+        }
+
+    def get_kinesis_source_stream(self):
+        return f"dp.{self.dataset['confidentiality']}.{self.dataset['Id']}.{self.get_processing_stage()}.{self.version}.json"
+
+    def get_kinesis_source_arn(self, kinesis_source_stream_name=None):
+        if kinesis_source_stream_name is None:
+            kinesis_source_stream_name = self.get_kinesis_source_stream()
+
         kinesis_source_base_arn = (
             "arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream"
         )
         # Where are we reading data from:
         kinesis_source_arn = f"{kinesis_source_base_arn}/{kinesis_source_stream_name}"
+        return kinesis_source_arn
+
+    def get_processing_stage(self):
+        # self.dataset does not contain processing_stage - for now default to "processed"
+        return "processed"
+
+    def get_output_prefix(self):
+        return f"{self.get_processing_stage()}/{self.dataset['confidentiality']}/{self.dataset['Id']}/version={self.version}"
+
+    def firehose_s3_delivery_stream(self):
+        kinesis_source_stream_name = self.get_kinesis_source_stream()
+        kinesis_source_arn = self.get_kinesis_source_arn(kinesis_source_stream_name)
 
         delivery_stream_name = f"{kinesis_source_stream_name}-sink-{self.sink.type}"
 
         output_bucket_arn = f"arn:aws:s3:::ok-origo-dataplatform-event-sink-{ENV}"
-        output_prefix = (
-            f"{self.dataset['confidentiality']}/{self.dataset['Id']}/{self.version}/"
-        )
-
-        # We use one shared role for both kinesis source & s3 destination
-        # This role holds everything to read & write to the correct resources
-        s3_sink_role = "arn:aws:iam::${AWS::AccountId}:role/event_stream_sink_s3_role"
+        output_prefix = self.get_output_prefix()
+        # https://docs.aws.amazon.com/firehose/latest/dev/s3-prefixes.html
+        date_prefix = "year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}"
 
         properties = {
             "DeliveryStreamName": delivery_stream_name,
             "DeliveryStreamType": "KinesisStreamAsSource",
             "KinesisStreamSourceConfiguration": {
                 "KinesisStreamARN": {"Fn::Sub": kinesis_source_arn},
-                "RoleARN": {"Fn::Sub": s3_sink_role},
+                "RoleARN": {"Fn::GetAtt": ["SinkS3ResourceIAM", "Arn"]},
             },
             "S3DestinationConfiguration": {
                 "BucketARN": output_bucket_arn,
                 "BufferingHints": {"IntervalInSeconds": 60, "SizeInMBs": 1},
-                "ErrorOutputPrefix": "error/",
-                "Prefix": output_prefix,
-                "RoleARN": {"Fn::Sub": s3_sink_role},
+                "ErrorOutputPrefix": f"error/!{{firehose:error-output-type}}/{date_prefix}/",
+                "Prefix": f"{output_prefix}/{date_prefix}/",
+                "RoleARN": {"Fn::GetAtt": ["SinkS3ResourceIAM", "Arn"]},
             },
         }
         """
@@ -69,12 +94,76 @@ class EventStreamSinkTemplate:
             "CompressionFormat" : String,
             "EncryptionConfiguration" : EncryptionConfiguration,
         """
+        return properties
+
+    def firehose_s3_iam(self):
+        permission_boundary_arn = (
+            "arn:aws:iam::${AWS::AccountId}:policy/oslokommune/oslokommune-boundary"
+        )
+
+        role_name = f"event-streams-{self.dataset['Id']}-{self.version}-sink-{self.sink.type}-role"[
+            0:64
+        ]
+        policy_name = f"event-streams-{self.dataset['Id']}-{self.version}-sink-{self.sink.type}-policy"[
+            0:128
+        ]
+
+        kinesis_source_arn = self.get_kinesis_source_arn()
+
+        s3_bucket_arn = f"arn:aws:s3:::ok-origo-dataplatform-event-sink-{ENV}"
+        s3_bucket_prefix = self.get_output_prefix()
+        s3_error_bucket = f"{s3_bucket_arn}/error/*"
+        s3_output_bucket = f"{s3_bucket_arn}/{s3_bucket_prefix}/*"
 
         return {
-            "SinkS3Resource": {
-                "Type": "AWS::KinesisFirehose::DeliveryStream",
-                "Properties": properties,
-            }
+            "PermissionsBoundary": {"Fn::Sub": permission_boundary_arn},
+            "RoleName": role_name,
+            "Tags": [
+                {"Key": "datasetId", "Value": self.dataset["Id"]},
+                {"Key": "version", "Value": self.version},
+            ],
+            "AssumeRolePolicyDocument": {
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {"Service": "firehose.amazonaws.com"},
+                        "Action": "sts:AssumeRole",
+                    }
+                ],
+            },
+            "Policies": [
+                {
+                    "PolicyName": policy_name,
+                    "PolicyDocument": {
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "kinesis:GetRecords",
+                                    "kinesis:GetShardIterator",
+                                    "kinesis:DescribeStream",
+                                    "kinesis:ListStreams",
+                                ],
+                                "Resource": {"Fn::Sub": kinesis_source_arn},
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": ["s3:GetBucketLocation", "s3:ListBucket"],
+                                "Resource": s3_bucket_arn,
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "s3:GetBucketLocation",
+                                    "s3:ListBucket",
+                                    "s3:PutObject",
+                                ],
+                                "Resource": [s3_error_bucket, s3_output_bucket],
+                            },
+                        ]
+                    },
+                }
+            ],
         }
 
     def firehose_elasticsearch(self):
