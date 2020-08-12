@@ -74,7 +74,7 @@ class EventStreamSinkTemplate:
         output_prefix = self.get_output_prefix()
         # https://docs.aws.amazon.com/firehose/latest/dev/s3-prefixes.html
         date_prefix = "year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}"
-
+        error_output = f"event-stream-sink/error/!{{firehose:error-output-type}}/{self.dataset['Id']}/{self.version}/{date_prefix}/"
         properties = {
             "DeliveryStreamName": delivery_stream_name,
             "DeliveryStreamType": "KinesisStreamAsSource",
@@ -84,9 +84,9 @@ class EventStreamSinkTemplate:
             },
             "S3DestinationConfiguration": {
                 "BucketARN": output_bucket_arn,
-                "BufferingHints": {"IntervalInSeconds": 60, "SizeInMBs": 1},
-                "ErrorOutputPrefix": f"event-stream-sink/error/!{{firehose:error-output-type}}/{date_prefix}/",
-                "Prefix": f"event-stream-sink/events/{output_prefix}/{date_prefix}/",
+                "BufferingHints": {"IntervalInSeconds": 300, "SizeInMBs": 1},
+                "ErrorOutputPrefix": error_output,
+                "Prefix": f"{output_prefix}/{date_prefix}/",
                 "RoleARN": {"Fn::GetAtt": ["SinkS3ResourceIAM", "Arn"]},
             },
         }
@@ -115,9 +115,7 @@ class EventStreamSinkTemplate:
         s3_bucket_arn = f"arn:aws:s3:::ok-origo-dataplatform-{ENV}"
         s3_bucket_prefix = self.get_output_prefix()
         s3_error_bucket = f"{s3_bucket_arn}/event-stream-sink/error/*"
-        s3_output_bucket = (
-            f"{s3_bucket_arn}/event-stream-sink/events/{s3_bucket_prefix}/*"
-        )
+        s3_output_bucket = f"{s3_bucket_arn}/{s3_bucket_prefix}/*"
 
         return {
             "PermissionsBoundary": {"Fn::Sub": permission_boundary_arn},
