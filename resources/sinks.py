@@ -13,8 +13,7 @@ logger = logging.getLogger()
 
 class SinkResource(Resource):
     def post(self, dataset_id, version):
-        abort(509)
-
+        abort(501)
     @auth.accepts_token
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
