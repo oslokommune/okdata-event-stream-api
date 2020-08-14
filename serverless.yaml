@@ -66,7 +66,7 @@ custom:
     slim: true
     usePoetry: false
   esLogs:
-    endpoint: ${ssm:/dataplatform/elasticsearch/endpoint}
+    endpoint: ${ssm:/dataplatform/shared/logs-elasticsearch-endpoint}
     index: dataplatform-services
     filterPattern: '{ $.function_name = "*" }'
   exportGitVariables: false
