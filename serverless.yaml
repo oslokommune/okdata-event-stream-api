@@ -12,8 +12,8 @@ provider:
   deploymentPrefix: deploy
   rolePermissionsBoundary: "arn:aws:iam::#{AWS::AccountId}:policy/oslokommune/oslokommune-boundary"
   iamManagedPolicies:
-    - 'arn:aws:iam::#{AWS::AccountId}:policy/event-stream-api-policy'
-    - 'arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess'
+    - "arn:aws:iam::#{AWS::AccountId}:policy/event-stream-api-policy"
+    - "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
   tags:
     GIT_REV: ${git:branch}:${git:sha1}
     VERSION: ${self:custom.version}
@@ -21,23 +21,24 @@ provider:
     GIT_REV: ${git:branch}:${git:sha1}
     VERSION: ${self:custom.version}
     ORIGO_ENVIRONMENT: ${self:provider.stage}
+    ES_API_ENDPOINT: ${ssm:/dataplatform/event-stream-api/eventdata-elasticsearch-endpoint}
 package:
   exclude:
-    - '**/*'
+    - "**/*"
   include:
-    - 'clients/*.py'
-    - 'database/*.py'
-    - 'notifications/*.py'
-    - 'resources/*.py'
-    - 'services/*.py'
-    - '*.py'
+    - "clients/*.py"
+    - "database/*.py"
+    - "notifications/*.py"
+    - "resources/*.py"
+    - "services/*.py"
+    - "*.py"
 
 functions:
   app:
     handler: wsgi_handler.handler
     events:
       - http: ANY /
-      - http: 'ANY {proxy+}'
+      - http: "ANY {proxy+}"
   update_cf_status:
     handler: notifications.sns_handler.handle
     events:
