@@ -6,12 +6,20 @@ from database import Sink, EventStream
 from database.models import SinkType
 from resources import Resource
 from resources.authorizer import auth
-from services import EventStreamService, ResourceConflict
+from services import (
+    EventStreamService,
+    ResourceConflict,
+    ResourceNotFound,
+    SubResourceNotFound,
+)
 
 logger = logging.getLogger()
 
 
 class SinkResource(Resource):
+    def __init__(self):
+        self.event_stream_service = EventStreamService(current_app.dataset_client)
+
     def post(self, dataset_id, version):
         abort(501)
 
@@ -31,7 +39,24 @@ class SinkResource(Resource):
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
     def delete(self, dataset_id, version, sink_id):
-        abort(501)
+        updated_by = g.principal_id
+        try:
+            self.event_stream_service.delete_sink(
+                dataset_id, version, sink_id, updated_by
+            )
+        except ResourceNotFound:
+            response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
+            abort(404, message=response_msg)
+        except SubResourceNotFound:
+            response_msg = (
+                f"Sink with id {sink_id} does not exist on {dataset_id}/{version}"
+            )
+            abort(404, message=response_msg)
+        except Exception as e:
+            logger.exception(e)
+            abort(500, message="Server error")
+
+        return {"message": f"Deleted sink {sink_id} from stream {dataset_id}/{version}"}
 
 
 class SinksResource(Resource):
@@ -49,10 +74,6 @@ class SinksResource(Resource):
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
     def post(self, dataset_id, version):
-        """
-        Create a new event stream sink:
-            curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{"type":"s3"}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}/sinks
-        """
         event_stream = self.event_stream_service.get_event_stream(dataset_id, version)
         if event_stream is None:
             response_msg = f"Event stream: {dataset_id}/{version} does not exist"

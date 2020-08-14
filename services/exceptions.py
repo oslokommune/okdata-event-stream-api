@@ -8,3 +8,7 @@ class ParentResourceNotReady(ResourceConflict):
 
 class ResourceNotFound(Exception):
     pass
+
+
+class SubResourceNotFound(Exception):
+    pass

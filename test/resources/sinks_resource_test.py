@@ -6,11 +6,12 @@ import test.test_data.stream as test_data
 from .conftest import valid_token
 from database import Sink
 from database.models import EventStream
-from services import EventStreamService
+from services import EventStreamService, SubResourceNotFound
 
 
 dataset_id = test_data.dataset_id
 version = test_data.version
+sink_id = test_data.sink_id
 auth_header = {"Authorization": f"bearer {valid_token}"}
 
 
@@ -105,6 +106,45 @@ class TestPostStreamSinkResource:
         assert data["message"] == "Sink: s3 already exists on my-test-dataset"
 
 
+class TestDeleteStreamSinkResource:
+    def test_delete_404_resource_not_found(
+        self,
+        mock_client,
+        mock_event_stream_no_service,
+        mock_dataset_versions,
+        mock_keycloak,
+        mock_authorizer,
+    ):
+        response = mock_client.delete(
+            f"/{dataset_id}/{version}/sinks/{sink_id}", headers=auth_header
+        )
+        data = json.loads(response.data)
+        assert response.status_code == 404
+        assert (
+            data["message"]
+            == f"Event stream with id {dataset_id}/{version} does not exist"
+        )
+
+    def test_delete_404_sub_resource_not_found(
+        self,
+        mock_client,
+        mock_event_get_stream,
+        mock_event_sink_does_not_exist,
+        mock_dataset_versions,
+        mock_keycloak,
+        mock_authorizer,
+    ):
+        response = mock_client.delete(
+            f"/{dataset_id}/{version}/sinks/{sink_id}", headers=auth_header
+        )
+        data = json.loads(response.data)
+        assert response.status_code == 404
+        assert (
+            data["message"]
+            == f"Sink with id {sink_id} does not exist on {dataset_id}/{version}"
+        )
+
+
 @pytest.fixture()
 def mock_event_stream_service(monkeypatch, mocker):
     def add_sink(self, event_stream, dataset_id, version, sink, updated_by):
@@ -119,6 +159,14 @@ def mock_event_stream_no_service(monkeypatch):
         return None
 
     monkeypatch.setattr(EventStreamService, "get_event_stream", get_event_stream)
+
+
+@pytest.fixture()
+def mock_event_sink_does_not_exist(monkeypatch):
+    def get_sink(self, event_stream, sink_id):
+        raise SubResourceNotFound
+
+    monkeypatch.setattr(EventStreamService, "get_sink", get_sink)
 
 
 @pytest.fixture()
@@ -155,6 +203,7 @@ def mock_event_get_stream(monkeypatch):
             updated_at="2020-08-01T12:01:01",
             deleted=False,
             cf_status="ACTIVE",
+            sinks=[],
         )
 
     monkeypatch.setattr(EventStreamService, "get_event_stream", get_event_stream)
