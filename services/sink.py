@@ -115,9 +115,7 @@ class EventStreamSinkTemplate:
         s3_bucket_arn = f"arn:aws:s3:::ok-origo-dataplatform-{ENV}"
         s3_bucket_prefix = self.get_output_prefix()
         s3_error_path = f"{s3_bucket_arn}/event-stream-sink/error/*"
-        s3_output_path = (
-            f"{s3_bucket_arn}/{s3_bucket_prefix}/*"
-        )
+        s3_output_path = f"{s3_bucket_arn}/{s3_bucket_prefix}/*"
 
         return {
             "PermissionsBoundary": {"Fn::Sub": permission_boundary_arn},
@@ -157,9 +155,7 @@ class EventStreamSinkTemplate:
                             },
                             {
                                 "Effect": "Allow",
-                                "Action": [
-                                    "s3:PutObject",
-                                ],
+                                "Action": ["s3:PutObject"],
                                 "Resource": [s3_error_path, s3_output_path],
                             },
                         ]
