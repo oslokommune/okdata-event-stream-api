@@ -192,8 +192,9 @@ class TestGetStreamSinkResource:
 
 @pytest.fixture()
 def mock_event_stream_service(monkeypatch, mocker):
-    def add_sink(self, event_stream, dataset_id, version, sink, updated_by):
-        return event_stream
+    def add_sink(self, dataset_id, version, request_data, updated_by):
+        sink = Sink(type="s3", id="fffff")
+        return sink
 
     monkeypatch.setattr(EventStreamSinkService, "add_sink", add_sink)
 

@@ -1,8 +1,10 @@
 import os
 from origo.data.dataset import Dataset
 from database import EventStreamsTable, EventStream, Sink, SinkType, StackTemplate
+from clients import CloudformationClient
 from services import (
     ResourceNotFound,
+    ResourceConflict,
     SubResourceNotFound,
     datetime_utils,
 )
@@ -24,7 +26,9 @@ def sink_for_api(sink: dict) -> dict:
 
 class EventStreamSinkService:
     def __init__(self, dataset_client: Dataset):
+        self.dataset_client = dataset_client
         self.event_streams_table = EventStreamsTable()
+        self.cloudformation_client = CloudformationClient()
 
     def get_event_stream(self, dataset_id: str, version: str):
         event_stream_id = f"{dataset_id}/{version}"
@@ -58,7 +62,26 @@ class EventStreamSinkService:
         existing_sink = self.get_sink(dataset_id, version, sink_id)
         return sink_for_api(existing_sink)
 
-    def add_sink(self, event_stream, dataset_id, version, sink, updated_by):
+    def sink_type_exists(self, event_stream: EventStream, sink_type: SinkType) -> bool:
+        for sink in event_stream.sinks:
+            if sink.type == sink_type.value:
+                return True
+        return False
+
+    def add_sink(self, dataset_id, version, sink_data, updated_by):
+        event_stream = self.get_event_stream(dataset_id, version)
+        if event_stream is None:
+            raise ResourceNotFound
+        if event_stream.deleted:
+            raise ResourceNotFound
+
+        sink_type = SinkType[sink_data["type"].upper()]
+        if self.sink_type_exists(event_stream, sink_type):
+            raise ResourceConflict(
+                f"Sink: {sink_type.value} already exists on {event_stream.id}"
+            )
+
+        sink = Sink(type=sink_type.value)
         dataset = self.dataset_client.get_dataset(dataset_id)
         sink_name = f"event-sink-{dataset_id}-{version}-{sink.id}"
         sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
@@ -72,7 +95,7 @@ class EventStreamSinkService:
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
         self.update_event_stream(event_stream, updated_by)
-        return event_stream
+        return sink
 
     def delete_sink(self, dataset_id, version, sink_id, updated_by):
         event_stream = self.get_event_stream(dataset_id, version)

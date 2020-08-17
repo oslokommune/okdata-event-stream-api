@@ -47,6 +47,9 @@ export FLASK_RUN_PORT=8080
 Requires `saml2aws`
 
 ## curl commands for the API
+Create a new event stream:
+  curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}
+
 Create a new event stream sink:
     curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{"type":"s3"}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}/sinks
 
