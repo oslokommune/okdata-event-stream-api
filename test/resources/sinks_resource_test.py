@@ -6,7 +6,7 @@ import test.test_data.stream as test_data
 from .conftest import valid_token
 from database import Sink
 from database.models import EventStream
-from services import EventStreamService, SubResourceNotFound
+from services import EventStreamService, EventStreamSinkService, SubResourceNotFound
 
 
 dataset_id = test_data.dataset_id
@@ -145,6 +145,51 @@ class TestDeleteStreamSinkResource:
         )
 
 
+class TestGetStreamSinkResource:
+    def test_get_200_sinks(
+        self,
+        mock_client,
+        mock_event_get_stream,
+        mock_dataset_versions,
+        mock_keycloak,
+        mock_authorizer,
+    ):
+        response = mock_client.get(
+            f"/{dataset_id}/{version}/sinks", headers=auth_header
+        )
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert len(data) == 1
+
+    def test_get_200_sink(
+        self,
+        mock_client,
+        mock_event_get_stream,
+        mock_dataset_versions,
+        mock_keycloak,
+        mock_authorizer,
+    ):
+        response = mock_client.get(
+            f"/{dataset_id}/{version}/sinks/fffff", headers=auth_header
+        )
+        data = json.loads(response.data)
+        assert response.status_code == 200
+        assert data["id"] == "fffff"
+
+    def test_get_404_sink(
+        self,
+        mock_client,
+        mock_event_get_stream,
+        mock_dataset_versions,
+        mock_keycloak,
+        mock_authorizer,
+    ):
+        response = mock_client.get(
+            f"/{dataset_id}/{version}/sinks/pppppp", headers=auth_header
+        )
+        assert response.status_code == 404
+
+
 @pytest.fixture()
 def mock_event_stream_service(monkeypatch, mocker):
     def add_sink(self, event_stream, dataset_id, version, sink, updated_by):
@@ -203,10 +248,24 @@ def mock_event_get_stream(monkeypatch):
             updated_at="2020-08-01T12:01:01",
             deleted=False,
             cf_status="ACTIVE",
-            sinks=[],
+            sinks=[
+                {
+                    "id": "fffff",
+                    "type": "elasticsearch",
+                    "cf_status": "ACTIVE",
+                    "deleted": False,
+                },
+                {
+                    "id": "gggg",
+                    "type": "elasticsearch",
+                    "cf_status": "DEACTIVE",
+                    "deleted": True,
+                },
+            ],
         )
 
     monkeypatch.setattr(EventStreamService, "get_event_stream", get_event_stream)
+    monkeypatch.setattr(EventStreamSinkService, "get_event_stream", get_event_stream)
 
     def get_dataset(self, dataset_id):
         return {"Id": "my-test-dataset", "confidentiality": "green"}

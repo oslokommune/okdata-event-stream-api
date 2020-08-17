@@ -1,6 +1,6 @@
 import logging
 from flask_restful import abort
-from flask import request, current_app, g
+from flask import request, current_app, g, jsonify
 
 from database import Sink, EventStream
 from database.models import SinkType
@@ -8,6 +8,7 @@ from resources import Resource
 from resources.authorizer import auth
 from services import (
     EventStreamService,
+    EventStreamSinkService,
     ResourceConflict,
     ResourceNotFound,
     SubResourceNotFound,
@@ -19,6 +20,7 @@ logger = logging.getLogger()
 class SinkResource(Resource):
     def __init__(self):
         self.event_stream_service = EventStreamService(current_app.dataset_client)
+        self.sink_service = EventStreamSinkService(current_app.dataset_client)
 
     def post(self, dataset_id, version):
         abort(501)
@@ -33,7 +35,17 @@ class SinkResource(Resource):
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
     def get(self, dataset_id, version, sink_id):
-        return {"enabled": True, "cf_status": "active"}
+        try:
+            return self.sink_service.get_sink_for_api(dataset_id, version, sink_id)
+        except SubResourceNotFound:
+            response_msg = f"sink {sink_id} does not exist on {dataset_id}/{version}"
+            abort(404, message=response_msg)
+        except Exception as e:
+            response_msg = (
+                f"Could not get sink {sink_id} from event stream {dataset_id}/{version}"
+            )
+            logger.exception(e)
+            abort(500, message=response_msg)
 
     @auth.accepts_token
     @auth.requires_dataset_ownership
@@ -62,6 +74,7 @@ class SinkResource(Resource):
 class SinksResource(Resource):
     def __init__(self):
         self.event_stream_service = EventStreamService(current_app.dataset_client)
+        self.sink_service = EventStreamSinkService(current_app.dataset_client)
 
     def sink_exists(self, event_stream: EventStream, sink_type: SinkType) -> bool:
         existing_sinks = event_stream.sinks
@@ -113,4 +126,10 @@ class SinksResource(Resource):
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
     def get(self, dataset_id, version):
-        return [{"enabled": True, "cf_status": "active"}]
+        try:
+            sinks = self.sink_service.get_sinks_for_api(dataset_id, version)
+            return jsonify(sinks)
+        except Exception as e:
+            response_msg = f"Could not get sink list: {str(e)}"
+            logger.exception(e)
+            abort(500, message=response_msg)

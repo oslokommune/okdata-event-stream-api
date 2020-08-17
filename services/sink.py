@@ -1,7 +1,57 @@
 import os
-from database import EventStream, Sink, SinkType, StackTemplate
+from origo.data.dataset import Dataset
+from database import EventStreamsTable, EventStream, Sink, SinkType, StackTemplate
+from services import SubResourceNotFound
 
 ENV = os.environ["ORIGO_ENVIRONMENT"]
+
+# Do not expose all internal information about a sink, just the ones
+# needed for the owner of the sink
+API_FIELDS_SINK = {"id": "id", "type": "type", "cf_status": "status"}
+
+
+def sink_for_api(sink: dict) -> dict:
+    ret = {}
+    for key in API_FIELDS_SINK:
+        ret[API_FIELDS_SINK[key]] = getattr(sink, key)
+    return ret
+
+
+class EventStreamSinkService:
+    def __init__(self, dataset_client: Dataset):
+        self.event_streams_table = EventStreamsTable()
+
+    def get_event_stream(self, dataset_id: str, version: str):
+        event_stream_id = f"{dataset_id}/{version}"
+        return self.event_streams_table.get_event_stream(event_stream_id)
+
+    def get_sinks(self, dataset_id, version) -> list:
+        event_stream = self.get_event_stream(dataset_id, version)
+        if not event_stream.sinks:
+            return []
+        return event_stream.sinks
+
+    def get_sinks_for_api(self, dataset_id: str, version: str) -> list:
+        sinks = self.get_sinks(dataset_id, version)
+        sink_list = []
+        for sink in sinks:
+            if sink.deleted:
+                continue
+            sink_list.append(sink_for_api(sink))
+        return sink_list
+
+    def get_sink(self, dataset_id: str, version: str, sink_id: str) -> dict:
+        sinks = self.get_sinks(dataset_id, version)
+        for sink in sinks:
+            if sink.id == sink_id and sink.deleted:
+                raise SubResourceNotFound
+            elif sink.id == sink_id:
+                return sink
+        raise SubResourceNotFound
+
+    def get_sink_for_api(self, dataset_id: str, version: str, sink_id: str) -> dict:
+        existing_sink = self.get_sink(dataset_id, version, sink_id)
+        return sink_for_api(existing_sink)
 
 
 class EventStreamSinkTemplate:
