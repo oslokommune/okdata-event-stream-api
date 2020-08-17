@@ -49,6 +49,6 @@ Requires `saml2aws`
 ## curl commands for the API
 Create a new event stream sink:
     curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{"type":"s3"}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}/sinks
-    
-Delete a event sink
+
+Delete an event sink
     curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" -XDELETE http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_id}
