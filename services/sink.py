@@ -64,11 +64,14 @@ class EventStreamSinkService:
         existing_sink = self.get_sink(dataset_id, version, sink_id)
         return sink_for_api(existing_sink)
 
-    def sink_type_exists(self, event_stream: EventStream, sink_type: SinkType) -> bool:
+    def check_for_existing_sink_type(self, event_stream: EventStream, sink_type: SinkType) -> bool:
         for sink in event_stream.sinks:
-            if sink.type == sink_type.value and sink.deleted is False:
-                return True
-        return False
+            if sink.type == sink_type and sink.cf_status == "DELETE_IN_PROGRESS":
+                raise ResourceUnderDeletion
+            elif sink.type == sink_type.value and sink.deleted is False:
+                raise ResourceConflict(
+                    f"Sink: {sink_type.value} already exists on {event_stream.id}"
+                )
 
     def add_sink(self, dataset_id, version, sink_data, updated_by):
         event_stream = self.get_event_stream(dataset_id, version)
@@ -78,15 +81,9 @@ class EventStreamSinkService:
             raise ResourceNotFound
 
         sink_type = SinkType[sink_data["type"].upper()]
-        if self.sink_type_exists(event_stream, sink_type):
-            raise ResourceConflict(
-                f"Sink: {sink_type.value} already exists on {event_stream.id}"
-            )
+        self.check_for_existing_sink_type(event_stream, sink_type)
 
         sink = Sink(type=sink_type.value)
-        if sink.cf_status == "DELETE_IN_PROGRESS":
-            raise ResourceUnderDeletion
-
         dataset = self.dataset_client.get_dataset(dataset_id)
         sink_name = f"event-sink-{dataset_id}-{version}-{sink.id}"
         sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
@@ -109,7 +106,7 @@ class EventStreamSinkService:
         if event_stream.deleted:
             raise ResourceNotFound
 
-        sink = self.get_sink(event_stream, sink_id)
+        sink = self.get_sink(dataset_id, version, sink_id)
         if sink.cf_status == "CREATE_IN_PROGRESS":
             raise ResourceUnderConstruction
         sink.cf_status = "DELETE_IN_PROGRESS"
