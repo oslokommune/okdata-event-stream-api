@@ -6,6 +6,8 @@ from services import (
     ResourceNotFound,
     ResourceConflict,
     SubResourceNotFound,
+    ResourceUnderConstruction,
+    ResourceUnderDeletion,
     datetime_utils,
 )
 
@@ -82,6 +84,9 @@ class EventStreamSinkService:
             )
 
         sink = Sink(type=sink_type.value)
+        if sink.cf_status == "DELETE_IN_PROGRESS":
+            raise ResourceUnderDeletion
+
         dataset = self.dataset_client.get_dataset(dataset_id)
         sink_name = f"event-sink-{dataset_id}-{version}-{sink.id}"
         sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
@@ -105,6 +110,8 @@ class EventStreamSinkService:
             raise ResourceNotFound
 
         sink = self.get_sink(event_stream, sink_id)
+        if sink.cf_status == "CREATE_IN_PROGRESS":
+            raise ResourceUnderConstruction
         sink.cf_status = "DELETE_IN_PROGRESS"
         sink.deleted = True
         self.cloudformation_client.delete_stack(sink.cf_stack_name)

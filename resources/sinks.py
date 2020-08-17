@@ -8,6 +8,8 @@ from services import (
     EventStreamSinkService,
     ResourceConflict,
     ResourceNotFound,
+    ResourceUnderDeletion,
+    ResourceUnderConstruction,
     SubResourceNotFound,
 )
 
@@ -58,6 +60,11 @@ class SinkResource(Resource):
                 f"Sink with id {sink_id} does not exist on {dataset_id}/{version}"
             )
             abort(404, message=response_msg)
+        except ResourceUnderConstruction:
+            response_msg = (
+                f"Sink with {sink_id} cannot be deleted since it is being constructed"
+            )
+            abort(409, response_msg)
         except Exception as e:
             logger.exception(e)
             abort(500, message="Server error")
@@ -84,6 +91,9 @@ class SinksResource(Resource):
         except ResourceConflict as rc:
             response_msg = str(rc)
             logger.exception(rc)
+            abort(409, message=response_msg)
+        except ResourceUnderDeletion:
+            response_msg = f"Cannot create sink since a sink of type {data['type']} currently is being deleted"
             abort(409, message=response_msg)
         except ResourceNotFound as e:
             response_msg = f"Event stream {dataset_id}/{version} does not exist"

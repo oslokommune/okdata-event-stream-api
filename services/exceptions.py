@@ -12,3 +12,11 @@ class ResourceNotFound(Exception):
 
 class SubResourceNotFound(Exception):
     pass
+
+
+class ResourceUnderConstruction(Exception):
+    pass
+
+
+class ResourceUnderDeletion(Exception):
+    pass

@@ -1,4 +1,10 @@
-from .exceptions import ResourceConflict, ResourceNotFound, SubResourceNotFound
+from .exceptions import (
+    ResourceConflict,
+    ResourceNotFound,
+    SubResourceNotFound,
+    ResourceUnderConstruction,
+    ResourceUnderDeletion,
+)
 from .stream import EventStreamService
 from .sink import EventStreamSinkService, EventStreamSinkTemplate
 from .subscribable import SubscribableService
@@ -9,6 +15,8 @@ __all__ = [
     "ResourceConflict",
     "ResourceNotFound",
     "SubResourceNotFound",
+    "ResourceUnderConstruction",
+    "ResourceUnderDeletion",
     "EventStreamService",
     "EventStreamSinkService",
     "EventStreamSinkTemplate",
