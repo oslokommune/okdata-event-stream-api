@@ -209,7 +209,7 @@ def mock_event_stream_no_service(monkeypatch):
 
 @pytest.fixture()
 def mock_event_sink_does_not_exist(monkeypatch):
-    def get_sink(self, event_stream, sink_id):
+    def get_sink(self, dataset_id, version, sink_id):
         raise SubResourceNotFound
 
     monkeypatch.setattr(EventStreamSinkService, "get_sink", get_sink)

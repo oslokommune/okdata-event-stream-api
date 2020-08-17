@@ -64,7 +64,9 @@ class EventStreamSinkService:
         existing_sink = self.get_sink(dataset_id, version, sink_id)
         return sink_for_api(existing_sink)
 
-    def check_for_existing_sink_type(self, event_stream: EventStream, sink_type: SinkType) -> bool:
+    def check_for_existing_sink_type(
+        self, event_stream: EventStream, sink_type: SinkType
+    ) -> bool:
         for sink in event_stream.sinks:
             if sink.type == sink_type and sink.cf_status == "DELETE_IN_PROGRESS":
                 raise ResourceUnderDeletion
