@@ -7,7 +7,6 @@ from database.models import SinkType
 from resources import Resource
 from resources.authorizer import auth
 from services import (
-    EventStreamService,
     EventStreamSinkService,
     ResourceConflict,
     ResourceNotFound,
@@ -19,7 +18,6 @@ logger = logging.getLogger()
 
 class SinkResource(Resource):
     def __init__(self):
-        self.event_stream_service = EventStreamService(current_app.dataset_client)
         self.sink_service = EventStreamSinkService(current_app.dataset_client)
 
     def post(self, dataset_id, version):
@@ -53,9 +51,7 @@ class SinkResource(Resource):
     def delete(self, dataset_id, version, sink_id):
         updated_by = g.principal_id
         try:
-            self.event_stream_service.delete_sink(
-                dataset_id, version, sink_id, updated_by
-            )
+            self.sink_service.delete_sink(dataset_id, version, sink_id, updated_by)
         except ResourceNotFound:
             response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
             abort(404, message=response_msg)
@@ -73,7 +69,6 @@ class SinkResource(Resource):
 
 class SinksResource(Resource):
     def __init__(self):
-        self.event_stream_service = EventStreamService(current_app.dataset_client)
         self.sink_service = EventStreamSinkService(current_app.dataset_client)
 
     def sink_exists(self, event_stream: EventStream, sink_type: SinkType) -> bool:
@@ -87,7 +82,7 @@ class SinksResource(Resource):
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
     def post(self, dataset_id, version):
-        event_stream = self.event_stream_service.get_event_stream(dataset_id, version)
+        event_stream = self.sink_service.get_event_stream(dataset_id, version)
         if event_stream is None:
             response_msg = f"Event stream: {dataset_id}/{version} does not exist"
             abort(404, message=response_msg)
@@ -113,7 +108,7 @@ class SinksResource(Resource):
 
         sink = Sink(type=sink_type.value)
         try:
-            self.event_stream_service.add_sink(
+            self.sink_service.add_sink(
                 event_stream, dataset_id, version, sink, g.principal_id
             )
             return {"type": sink_type.value, "id": sink.id}, 201

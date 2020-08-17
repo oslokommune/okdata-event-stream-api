@@ -5,10 +5,8 @@ from clients import CloudformationClient
 from services import (
     ResourceConflict,
     ResourceNotFound,
-    SubResourceNotFound,
     datetime_utils,
 )
-from services.sink import EventStreamSinkTemplate
 
 pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route"
 
@@ -67,44 +65,6 @@ class EventStreamService:
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
         return event_stream
-
-    def add_sink(self, event_stream, dataset_id, version, sink, updated_by):
-        dataset = self.dataset_client.get_dataset(dataset_id)
-        sink_name = f"event-sink-{dataset_id}-{version}-{sink.id}"
-        sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
-        sink.cf_stack_template = sink_template.generate_stack_template()
-        sink.cf_status = "CREATE_IN_PROGRESS"
-        sink.cf_stack_name = sink_name
-        event_stream.sinks.append(sink)
-        self.cloudformation_client.create_stack(
-            name=sink_name,
-            template=sink.cf_stack_template.json(),
-            tags=[{"Key": "created_by", "Value": updated_by}],
-        )
-        self.update_event_stream(event_stream, updated_by)
-        return event_stream
-
-    def delete_sink(self, dataset_id, version, sink_id, updated_by):
-        event_stream = self.get_event_stream(dataset_id, version)
-        if event_stream is None:
-            raise ResourceNotFound
-        if event_stream.deleted:
-            raise ResourceNotFound
-
-        sink = self.get_sink(event_stream, sink_id)
-        sink.cf_status = "DELETE_IN_PROGRESS"
-        sink.deleted = True
-        self.cloudformation_client.delete_stack(sink.cf_stack_name)
-        self.update_event_stream(event_stream, updated_by)
-
-    def get_sink(self, event_stream: EventStream, sink_id: str):
-        existing_sinks = event_stream.sinks
-        for sink in existing_sinks:
-            if sink.id == sink_id and sink.deleted is True:
-                raise SubResourceNotFound
-            elif sink.id == sink_id:
-                return sink
-        raise SubResourceNotFound
 
     def update_event_stream(self, event_stream: EventStream, updated_by: str):
         event_stream.config_version += 1

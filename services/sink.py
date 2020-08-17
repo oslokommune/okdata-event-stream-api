@@ -1,7 +1,12 @@
 import os
 from origo.data.dataset import Dataset
 from database import EventStreamsTable, EventStream, Sink, SinkType, StackTemplate
-from services import SubResourceNotFound
+from services import (
+    ResourceNotFound,
+    SubResourceNotFound,
+    datetime_utils,
+)
+
 
 ENV = os.environ["ORIGO_ENVIRONMENT"]
 
@@ -52,6 +57,41 @@ class EventStreamSinkService:
     def get_sink_for_api(self, dataset_id: str, version: str, sink_id: str) -> dict:
         existing_sink = self.get_sink(dataset_id, version, sink_id)
         return sink_for_api(existing_sink)
+
+    def add_sink(self, event_stream, dataset_id, version, sink, updated_by):
+        dataset = self.dataset_client.get_dataset(dataset_id)
+        sink_name = f"event-sink-{dataset_id}-{version}-{sink.id}"
+        sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
+        sink.cf_stack_template = sink_template.generate_stack_template()
+        sink.cf_status = "CREATE_IN_PROGRESS"
+        sink.cf_stack_name = sink_name
+        event_stream.sinks.append(sink)
+        self.cloudformation_client.create_stack(
+            name=sink_name,
+            template=sink.cf_stack_template.json(),
+            tags=[{"Key": "created_by", "Value": updated_by}],
+        )
+        self.update_event_stream(event_stream, updated_by)
+        return event_stream
+
+    def delete_sink(self, dataset_id, version, sink_id, updated_by):
+        event_stream = self.get_event_stream(dataset_id, version)
+        if event_stream is None:
+            raise ResourceNotFound
+        if event_stream.deleted:
+            raise ResourceNotFound
+
+        sink = self.get_sink(event_stream, sink_id)
+        sink.cf_status = "DELETE_IN_PROGRESS"
+        sink.deleted = True
+        self.cloudformation_client.delete_stack(sink.cf_stack_name)
+        self.update_event_stream(event_stream, updated_by)
+
+    def update_event_stream(self, event_stream: EventStream, updated_by: str):
+        event_stream.config_version += 1
+        event_stream.updated_by = updated_by
+        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
+        self.event_streams_table.put_event_stream(event_stream)
 
 
 class EventStreamSinkTemplate:
