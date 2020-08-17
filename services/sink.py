@@ -64,7 +64,7 @@ class EventStreamSinkService:
 
     def sink_type_exists(self, event_stream: EventStream, sink_type: SinkType) -> bool:
         for sink in event_stream.sinks:
-            if sink.type == sink_type.value:
+            if sink.type == sink_type.value and sink.deleted is False:
                 return True
         return False
 
