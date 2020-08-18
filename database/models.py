@@ -72,7 +72,7 @@ class Sink(Stack):
     config: dict = {}
     deleted: bool = False
     cf_stack_name: str = ""
-    id: str = Field(default_factory=lambda: ShortUUID().random(length=5))
+    id: str = Field(default_factory=lambda: ShortUUID().random(length=5).lower())
 
 
 class SinkType(Enum):
