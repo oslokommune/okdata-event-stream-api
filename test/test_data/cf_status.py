@@ -19,6 +19,7 @@ event_stream = EventStream(
     **{
         "cf_stack_template": cf_stack_template,
         "cf_status": "CREATE_IN_PROGRESS",
+        "cf_stack_name": f"event-stream-{dataset_id}-{version}",
         "id": event_stream_id,
         "create_raw": True,
         "updated_by": "larsmonsen",
@@ -27,6 +28,7 @@ event_stream = EventStream(
         "subscribable": {
             "enabled": True,
             "cf_stack_template": cf_stack_template,
+            "cf_stack_name": f"event-subscribable-{dataset_id}-{version}",
             "cf_status": "CREATE_IN_PROGRESS",
         },
         "sinks": [
@@ -35,6 +37,7 @@ event_stream = EventStream(
                 "type": "s3",
                 "config": {"write_interval_seconds": 300},
                 "cf_stack_template": cf_stack_template,
+                "cf_stack_name": f"event-sink-{dataset_id}-{version}-c8sh5",
                 "cf_status": "ACTIVE",
             },
             {
@@ -42,6 +45,7 @@ event_stream = EventStream(
                 "type": "elasticsearch",
                 "config": {"es_cluster": "some-uri"},
                 "cf_stack_template": cf_stack_template,
+                "cf_stack_name": f"event-sink-{dataset_id}-{version}-{sink_id}",
                 "cf_status": "CREATE_IN_PROGRESS",
             },
         ],

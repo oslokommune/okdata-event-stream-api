@@ -94,6 +94,7 @@ event_stream = EventStream(
     **{
         "cf_stack_template": processed_and_raw_cf_template,
         "cf_status": "CREATE_IN_PROGRESS",
+        "cf_stack_name": f"event-stream-{dataset_id}-{version}",
         "id": f"{dataset_id}/{version}",
         "create_raw": True,
         "updated_by": "larsmonsen",
@@ -103,6 +104,7 @@ event_stream = EventStream(
         "subscribable": {
             "cf_stack_template": None,
             "cf_status": "INACTIVE",
+            "cf_stack_name": f"event-subscribable-{dataset_id}-{version}",
             "enabled": False,
         },
     }
@@ -112,6 +114,7 @@ deleted_event_stream = EventStream(
     **{
         "cf_stack_template": processed_and_raw_cf_template,
         "cf_status": "INACTIVE",
+        "cf_stack_name": f"event-stream-{dataset_id}-{version}",
         "config_version": 2,
         "id": f"{dataset_id}/{version}",
         "create_raw": True,
@@ -121,6 +124,7 @@ deleted_event_stream = EventStream(
         "sinks": [],
         "subscribable": {
             "cf_stack_template": None,
+            "cf_stack_name": f"event-subscribable-{dataset_id}-{version}",
             "cf_status": "INACTIVE",
             "enabled": False,
         },
@@ -131,6 +135,7 @@ event_stream_with_subresources = EventStream(
     **{
         "cf_stack_template": processed_and_raw_cf_template,
         "cf_status": "CREATE_IN_PROGRESS",
+        "cf_stack_name": f"event-stream-{dataset_id}-{version}",
         "id": f"{dataset_id}/{version}",
         "create_raw": True,
         "updated_by": "larsmonsen",
@@ -139,6 +144,7 @@ event_stream_with_subresources = EventStream(
         "sinks": [],
         "subscribable": {
             "cf_stack_template": None,
+            "cf_stack_name": f"event-subscribable-{dataset_id}-{version}",
             "cf_status": "ACTIVE",
             "enabled": True,
         },

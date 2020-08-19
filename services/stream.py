@@ -57,6 +57,7 @@ class EventStreamService:
             create_raw=create_raw,
         )
         event_stream.cf_status = "CREATE_IN_PROGRESS"
+        event_stream.cf_stack_name = event_stream.get_stack_name()
 
         self.event_streams_table.put_event_stream(event_stream)
         self.cloudformation_client.create_stack(

@@ -9,7 +9,7 @@ from services.exceptions import (
     ParentResourceNotReady,
     ResourceConflict,
 )
-from database import EventStreamsTable, Subscribable, StackTemplate, CfStackType
+from database import EventStreamsTable, Subscribable, StackTemplate
 
 
 event_publisher_lambda_name = (
@@ -43,7 +43,7 @@ class SubscribableService:
         if event_stream.subscribable.enabled:
             raise ResourceConflict
 
-        event_stream.subscribable = Subscribable(
+        subscribable = Subscribable(
             cf_stack_template=generate_subscribable_cf_template(
                 dataset_id=dataset_id,
                 version=version,
@@ -54,6 +54,9 @@ class SubscribableService:
             cf_status="CREATE_IN_PROGRESS",
             enabled=True,
         )
+        subscribable.cf_stack_name = subscribable.get_stack_name(dataset_id, version)
+
+        event_stream.subscribable = subscribable
         event_stream.config_version += 1
         event_stream.updated_by = updated_by
         event_stream.updated_at = datetime_utils.utc_now_with_timezone()
@@ -61,7 +64,7 @@ class SubscribableService:
         self.event_streams_table.put_event_stream(event_stream)
 
         self.cloudformation_client.create_stack(
-            name=generate_subscribable_cf_stack_name(dataset_id, version),
+            name=subscribable.cf_stack_name,
             template=event_stream.subscribable.cf_stack_template.json(),
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
@@ -86,7 +89,7 @@ class SubscribableService:
         self.event_streams_table.put_event_stream(event_stream)
 
         self.cloudformation_client.delete_stack(
-            name=generate_subscribable_cf_stack_name(dataset_id, version)
+            name=event_stream.subscribable.cf_stack_name
         )
 
         return event_stream.subscribable
@@ -118,7 +121,3 @@ def generate_subscribable_cf_template(dataset_id, version, dataset_confidentiali
             },
         }
     )
-
-
-def generate_subscribable_cf_stack_name(dataset_id, version):
-    return f"{CfStackType.SUBSCRIBABLE.value}-{dataset_id}-{version}"

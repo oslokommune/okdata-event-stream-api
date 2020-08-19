@@ -43,6 +43,7 @@ class StackTemplate(BaseStackModel):
 class Stack(BaseModel):
     cf_stack_template: StackTemplate = None
     cf_status: str = Field("INACTIVE", max_length=20)
+    cf_stack_name: str = None
 
     @property
     def is_active(self):
@@ -66,13 +67,18 @@ class Stack(BaseModel):
 class Subscribable(Stack):
     enabled: bool = False
 
+    def get_stack_name(self, dataset_id, version):
+        return f"{CfStackType.SUBSCRIBABLE.value}-{dataset_id}-{version}"
+
 
 class Sink(Stack):
     type: str
     config: dict = {}
     deleted: bool = False
-    cf_stack_name: str = ""
     id: str = Field(default_factory=lambda: ShortUUID().random(length=5).lower())
+
+    def get_stack_name(self, dataset_id, version):
+        return f"{CfStackType.SINK.value}-{dataset_id}-{version}-{self.id}"
 
 
 class SinkType(Enum):
@@ -92,8 +98,7 @@ class EventStream(Stack):
     subscribable: Subscribable = Field(default_factory=Subscribable)
     sinks: List[Sink] = list()
 
-    @property
-    def cf_stack_name(self):
+    def get_stack_name(self):
         [dataset_id, version] = self.id.split("/")
         return f"{CfStackType.EVENT_STREAM.value}-{dataset_id}-{version}"
 
