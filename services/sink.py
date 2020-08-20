@@ -50,7 +50,9 @@ class SinkService(EventService):
         sinks = self.get_sinks(dataset_id, version)
         return self.get_sink_from_sink_list(sinks, sink_id)
 
-    def get_sink_from_event_stream(self, event_stream: EventStream, sink_id: str) -> dict:
+    def get_sink_from_event_stream(
+        self, event_stream: EventStream, sink_id: str
+    ) -> dict:
         sinks = event_stream.sinks
         return self.get_sink_from_sink_list(sinks, sink_id)
 
