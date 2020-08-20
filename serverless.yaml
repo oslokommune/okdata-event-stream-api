@@ -31,6 +31,7 @@ package:
     - "notifications/*.py"
     - "resources/*.py"
     - "services/*.py"
+    - "services/template/*.py"
     - "*.py"
 
 functions:

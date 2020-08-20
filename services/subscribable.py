@@ -53,6 +53,8 @@ class SubscribableService:
             ),
             cf_status="CREATE_IN_PROGRESS",
             enabled=True,
+            updated_by=updated_by,
+            updated_at=datetime_utils.utc_now_with_timezone(),
         )
         subscribable.cf_stack_name = subscribable.get_stack_name(dataset_id, version)
 

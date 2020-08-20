@@ -44,6 +44,10 @@ class Stack(BaseModel):
     cf_stack_template: StackTemplate = None
     cf_status: str = Field("INACTIVE", max_length=20)
     cf_stack_name: str = None
+    updated_by: str = None  # Remove None when all DynamoDB in dev have this field ;)
+    updated_at: datetime = Field(
+        default_factory=datetime_utils.utc_now_with_timezone, str=datetime.isoformat
+    )
 
     @property
     def is_active(self):
@@ -90,10 +94,6 @@ class EventStream(Stack):
     id: str
     config_version: int = 1
     create_raw: bool
-    updated_by: str
-    updated_at: datetime = Field(
-        default_factory=datetime_utils.utc_now_with_timezone, str=datetime.isoformat
-    )
     deleted: bool = False
     subscribable: Subscribable = Field(default_factory=Subscribable)
     sinks: List[Sink] = list()

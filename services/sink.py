@@ -86,11 +86,15 @@ class EventStreamSinkService:
 
         dataset = self.dataset_client.get_dataset(dataset_id)
 
-        sink = Sink(type=sink_type.value)
+        sink = Sink(
+            type=sink_type.value,
+            cf_status="CREATE_IN_PROGRESS",
+            updated_by=updated_by,
+            updated_at=datetime_utils.utc_now_with_timezone(),
+        )
         sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
         sink.cf_stack_name = sink.get_stack_name(dataset_id, version)
         sink.cf_stack_template = sink_template.generate_stack_template()
-        sink.cf_status = "CREATE_IN_PROGRESS"
 
         event_stream.sinks.append(sink)
         self.cloudformation_client.create_stack(
