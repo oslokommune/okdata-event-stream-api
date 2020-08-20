@@ -4,7 +4,7 @@ from database import EventStream, Sink, SinkType, StackTemplate
 ENV = os.environ["ORIGO_ENVIRONMENT"]
 
 
-class EventStreamSinkTemplate:
+class SinkTemplate:
     def __init__(
         self, event_stream: EventStream, dataset: dict, version: str, sink: Sink
     ):

@@ -1,16 +1,11 @@
-import os
-from database import EventStream, StackTemplate
+from database import EventStream
 from services import (
     EventService,
     ResourceConflict,
     ResourceNotFound,
     datetime_utils,
 )
-
-pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route"
-
-# TODO: Enable/remove flag when https://jira.oslo.kommune.no/browse/DP-964 is done
-create_pipeline_triggers = False
+from services.template import EventStreamTemplate
 
 
 class EventStreamService(EventService):
@@ -37,15 +32,9 @@ class EventStreamService(EventService):
                 }
             )
 
-        event_stream.cf_stack_template = generate_event_stream_cf_template(
-            dataset_id=dataset_id,
-            version=version,
-            dataset_confidentiality=self.dataset_client.get_dataset(dataset_id)[
-                "confidentiality"
-            ],
-            updated_by=updated_by,
-            create_raw=create_raw,
-        )
+        dataset = self.dataset_client.get_dataset(dataset_id)
+        stream_template = EventStreamTemplate(dataset, version, updated_by, create_raw)
+        event_stream.cf_stack_template = stream_template.generate_stack_template()
         event_stream.cf_status = "CREATE_IN_PROGRESS"
         event_stream.cf_stack_name = event_stream.get_stack_name()
 
@@ -82,66 +71,3 @@ def sub_resources_exist(event_stream: EventStream):
         if sink.cf_status != "INACTIVE":
             return True
     return False
-
-
-def generate_event_stream_cf_template(
-    dataset_id, version, dataset_confidentiality, updated_by, create_raw
-):
-
-    resources = {}
-
-    if create_raw:
-        raw_stream_name = (
-            f"dp.{dataset_confidentiality}.{dataset_id}.raw.{version}.json"
-        )
-        resources["RawDataStream"] = data_stream_resource(raw_stream_name, updated_by)
-        if create_pipeline_triggers:
-            resources["RawPipelineTrigger"] = pipeline_trigger_resource(raw_stream_name)
-
-    processed_stream_name = (
-        f"dp.{dataset_confidentiality}.{dataset_id}.processed.{version}.json"
-    )
-    resources["ProcessedDataStream"] = data_stream_resource(
-        processed_stream_name, updated_by
-    )
-    if create_pipeline_triggers:
-        resources["ProcessedPipelineTrigger"] = pipeline_trigger_resource(
-            processed_stream_name
-        )
-
-    return StackTemplate(
-        **{
-            "Description": f"Kinesis streams and pipeline triggers for {dataset_id}/{version}",
-            "Resources": resources,
-        }
-    )
-
-
-def data_stream_resource(stream_name, created_by):
-    return {
-        "Type": "AWS::Kinesis::Stream",
-        "Properties": {
-            "Name": stream_name,
-            "ShardCount": 1,
-            "Tags": [{"Key": "created_by", "Value": created_by}],
-        },
-    }
-
-
-def pipeline_trigger_resource(stream_name):
-    return {
-        "Type": "AWS::Lambda::EventSourceMapping",
-        "Properties": {
-            "BatchSize": 10,
-            "Enabled": True,
-            "EventSourceArn": {
-                "Fn::Sub": "arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/"
-                + f"{stream_name}"
-            },
-            "FunctionName": {
-                "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:"
-                + pipeline_router_lambda_name
-            },
-            "StartingPosition": "LATEST",
-        },
-    }

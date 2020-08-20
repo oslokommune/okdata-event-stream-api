@@ -8,7 +8,7 @@ from services import (
     ResourceUnderDeletion,
     datetime_utils,
 )
-from services.template import EventStreamSinkTemplate
+from services.template import SinkTemplate
 
 # Do not expose all internal information about a sink, just the ones
 # needed for the owner of the sink
@@ -91,7 +91,7 @@ class SinkService(EventService):
             updated_by=updated_by,
             updated_at=datetime_utils.utc_now_with_timezone(),
         )
-        sink_template = EventStreamSinkTemplate(event_stream, dataset, version, sink)
+        sink_template = SinkTemplate(event_stream, dataset, version, sink)
         sink.cf_stack_name = sink.get_stack_name(dataset_id, version)
         sink.cf_stack_template = sink_template.generate_stack_template()
 
