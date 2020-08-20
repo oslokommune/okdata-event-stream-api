@@ -5,7 +5,7 @@ from flask import request, current_app, g, jsonify
 from resources import Resource
 from resources.authorizer import auth
 from services import (
-    EventStreamSinkService,
+    SinkService,
     ResourceConflict,
     ResourceNotFound,
     ResourceUnderDeletion,
@@ -18,7 +18,7 @@ logger = logging.getLogger()
 
 class SinkResource(Resource):
     def __init__(self):
-        self.sink_service = EventStreamSinkService(current_app.dataset_client)
+        self.sink_service = SinkService(current_app.dataset_client)
 
     def post(self, dataset_id, version):
         abort(501)
@@ -74,7 +74,7 @@ class SinkResource(Resource):
 
 class SinksResource(Resource):
     def __init__(self):
-        self.sink_service = EventStreamSinkService(current_app.dataset_client)
+        self.sink_service = SinkService(current_app.dataset_client)
 
     @auth.accepts_token
     @auth.requires_dataset_ownership

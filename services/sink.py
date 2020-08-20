@@ -1,7 +1,6 @@
-from origo.data.dataset import Dataset
-from database import EventStreamsTable, EventStream, Sink, SinkType
-from clients import CloudformationClient
+from database import EventStream, Sink, SinkType
 from services import (
+    EventService,
     ResourceNotFound,
     ResourceConflict,
     SubResourceNotFound,
@@ -23,16 +22,7 @@ def sink_for_api(sink: dict) -> dict:
     return ret
 
 
-class EventStreamSinkService:
-    def __init__(self, dataset_client: Dataset):
-        self.dataset_client = dataset_client
-        self.event_streams_table = EventStreamsTable()
-        self.cloudformation_client = CloudformationClient()
-
-    def get_event_stream(self, dataset_id: str, version: str):
-        event_stream_id = f"{dataset_id}/{version}"
-        return self.event_streams_table.get_event_stream(event_stream_id)
-
+class SinkService(EventService):
     def get_sinks(self, dataset_id: str, version: str) -> list:
         event_stream = self.get_event_stream(dataset_id, version)
         if not event_stream.sinks:
@@ -119,9 +109,3 @@ class EventStreamSinkService:
         sink.deleted = True
         self.cloudformation_client.delete_stack(sink.cf_stack_name)
         self.update_event_stream(event_stream, updated_by)
-
-    def update_event_stream(self, event_stream: EventStream, updated_by: str):
-        event_stream.config_version += 1
-        event_stream.updated_by = updated_by
-        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
-        self.event_streams_table.put_event_stream(event_stream)

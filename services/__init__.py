@@ -5,8 +5,9 @@ from .exceptions import (
     ResourceUnderConstruction,
     ResourceUnderDeletion,
 )
+from .service import EventService
 from .stream import EventStreamService
-from .sink import EventStreamSinkService
+from .sink import SinkService
 from .subscribable import SubscribableService
 from .cf_status import CfStatusService
 from .events import ElasticsearchDataService
@@ -17,8 +18,9 @@ __all__ = [
     "SubResourceNotFound",
     "ResourceUnderConstruction",
     "ResourceUnderDeletion",
+    "EventService",
     "EventStreamService",
-    "EventStreamSinkService",
+    "SinkService",
     "SubscribableService",
     "CfStatusService",
     "ElasticsearchDataService",

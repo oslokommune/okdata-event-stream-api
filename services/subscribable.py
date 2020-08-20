@@ -1,15 +1,12 @@
 import os
 
-from origo.data.dataset import Dataset
-
-from clients import CloudformationClient
-from services import datetime_utils
+from services import datetime_utils, EventService
 from services.exceptions import (
     ResourceNotFound,
     ParentResourceNotReady,
     ResourceConflict,
 )
-from database import EventStreamsTable, Subscribable, StackTemplate
+from database import Subscribable, StackTemplate
 
 
 event_publisher_lambda_name = (
@@ -17,15 +14,9 @@ event_publisher_lambda_name = (
 )
 
 
-class SubscribableService:
-    def __init__(self, dataset_client: Dataset):
-        self.dataset_client = dataset_client
-        self.cloudformation_client = CloudformationClient()
-        self.event_streams_table = EventStreamsTable()
-
+class SubscribableService(EventService):
     def get_subscribable(self, dataset_id, version):
-        event_stream_id = f"{dataset_id}/{version}"
-        event_stream = self.event_streams_table.get_event_stream(event_stream_id)
+        event_stream = self.get_event_stream(dataset_id, version)
 
         if not event_stream or event_stream.deleted:
             raise ResourceNotFound
@@ -33,8 +24,7 @@ class SubscribableService:
         return event_stream.subscribable
 
     def enable_subscribable(self, dataset_id, version, updated_by):
-        event_stream_id = f"{dataset_id}/{version}"
-        event_stream = self.event_streams_table.get_event_stream(event_stream_id)
+        event_stream = self.get_event_stream(dataset_id, version)
 
         if not event_stream or event_stream.deleted:
             raise ResourceNotFound
@@ -57,13 +47,9 @@ class SubscribableService:
             updated_at=datetime_utils.utc_now_with_timezone(),
         )
         subscribable.cf_stack_name = subscribable.get_stack_name(dataset_id, version)
-
         event_stream.subscribable = subscribable
-        event_stream.config_version += 1
-        event_stream.updated_by = updated_by
-        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
 
-        self.event_streams_table.put_event_stream(event_stream)
+        self.update_event_stream(event_stream, updated_by)
 
         self.cloudformation_client.create_stack(
             name=subscribable.cf_stack_name,
@@ -74,8 +60,7 @@ class SubscribableService:
         return event_stream.subscribable
 
     def disable_subscribable(self, dataset_id, version, updated_by):
-        event_stream_id = f"{dataset_id}/{version}"
-        event_stream = self.event_streams_table.get_event_stream(event_stream_id)
+        event_stream = self.get_event_stream(dataset_id, version)
 
         if not event_stream or event_stream.deleted:
             raise ResourceNotFound
@@ -84,11 +69,8 @@ class SubscribableService:
 
         event_stream.subscribable.cf_status = "DELETE_IN_PROGRESS"
         event_stream.subscribable.enabled = False
-        event_stream.config_version += 1
-        event_stream.updated_by = updated_by
-        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
 
-        self.event_streams_table.put_event_stream(event_stream)
+        self.update_event_stream(event_stream, updated_by)
 
         self.cloudformation_client.delete_stack(
             name=event_stream.subscribable.cf_stack_name

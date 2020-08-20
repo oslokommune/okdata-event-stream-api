@@ -6,7 +6,7 @@ import test.test_data.stream as test_data
 from .conftest import valid_token
 from database import Sink
 from database.models import EventStream
-from services import EventStreamSinkService, SubResourceNotFound
+from services import SinkService, SubResourceNotFound
 
 
 dataset_id = test_data.dataset_id
@@ -196,7 +196,7 @@ def mock_event_stream_service(monkeypatch, mocker):
         sink = Sink(type="s3", id="fffff")
         return sink
 
-    monkeypatch.setattr(EventStreamSinkService, "add_sink", add_sink)
+    monkeypatch.setattr(SinkService, "add_sink", add_sink)
 
 
 @pytest.fixture()
@@ -204,7 +204,7 @@ def mock_event_stream_no_service(monkeypatch):
     def get_event_stream(self, dataset_id, version):
         return None
 
-    monkeypatch.setattr(EventStreamSinkService, "get_event_stream", get_event_stream)
+    monkeypatch.setattr(SinkService, "get_event_stream", get_event_stream)
 
 
 @pytest.fixture()
@@ -212,7 +212,7 @@ def mock_event_sink_does_not_exist(monkeypatch):
     def get_sink(self, dataset_id, version, sink_id):
         raise SubResourceNotFound
 
-    monkeypatch.setattr(EventStreamSinkService, "get_sink", get_sink)
+    monkeypatch.setattr(SinkService, "get_sink", get_sink)
 
 
 @pytest.fixture()
@@ -228,7 +228,7 @@ def mock_event_get_stream_no_stream(monkeypatch):
     def get_event_stream(self, dataset_id, version):
         return None
 
-    monkeypatch.setattr(EventStreamSinkService, "get_event_stream", get_event_stream)
+    monkeypatch.setattr(SinkService, "get_event_stream", get_event_stream)
 
 
 @pytest.fixture()
@@ -265,7 +265,7 @@ def mock_event_get_stream(monkeypatch):
             ],
         )
 
-    monkeypatch.setattr(EventStreamSinkService, "get_event_stream", get_event_stream)
+    monkeypatch.setattr(SinkService, "get_event_stream", get_event_stream)
 
     def get_dataset(self, dataset_id):
         return {"Id": "my-test-dataset", "confidentiality": "green"}
@@ -288,7 +288,7 @@ def mock_event_get_stream_with_s3_sink(monkeypatch):
         ret.sinks.append(sink)
         return ret
 
-    monkeypatch.setattr(EventStreamSinkService, "get_event_stream", get_event_stream)
+    monkeypatch.setattr(SinkService, "get_event_stream", get_event_stream)
 
     def get_dataset(self, dataset_id):
         return {"Id": "my-test-dataset", "confidentiality": "green"}

@@ -1,8 +1,7 @@
 import os
-from origo.data.dataset import Dataset
-from database import EventStreamsTable, EventStream, StackTemplate
-from clients import CloudformationClient
+from database import EventStream, StackTemplate
 from services import (
+    EventService,
     ResourceConflict,
     ResourceNotFound,
     datetime_utils,
@@ -14,16 +13,7 @@ pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']
 create_pipeline_triggers = False
 
 
-class EventStreamService:
-    def __init__(self, dataset_client: Dataset):
-        self.dataset_client = dataset_client
-        self.cloudformation_client = CloudformationClient()
-        self.event_streams_table = EventStreamsTable()
-
-    def get_event_stream(self, dataset_id, version):
-        event_stream_id = f"{dataset_id}/{version}"
-        return self.event_streams_table.get_event_stream(event_stream_id)
-
+class EventStreamService(EventService):
     def create_event_stream(self, dataset_id, version, updated_by, create_raw=True):
         event_stream = self.get_event_stream(dataset_id, version)
 
@@ -66,12 +56,6 @@ class EventStreamService:
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
         return event_stream
-
-    def update_event_stream(self, event_stream: EventStream, updated_by: str):
-        event_stream.config_version += 1
-        event_stream.updated_by = updated_by
-        event_stream.updated_at = datetime_utils.utc_now_with_timezone()
-        self.event_streams_table.put_event_stream(event_stream)
 
     def delete_event_stream(self, dataset_id, version, updated_by):
         event_stream = self.get_event_stream(dataset_id, version)
