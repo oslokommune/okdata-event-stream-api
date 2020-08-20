@@ -38,14 +38,21 @@ class SinkService(EventService):
             sink_list.append(sink_for_api(sink))
         return sink_list
 
-    def get_sink(self, dataset_id: str, version: str, sink_id: str) -> dict:
-        sinks = self.get_sinks(dataset_id, version)
+    def get_sink_from_sink_list(self, sinks: list, sink_id) -> dict:
         for sink in sinks:
             if sink.id == sink_id and sink.deleted:
                 raise SubResourceNotFound
             elif sink.id == sink_id:
                 return sink
         raise SubResourceNotFound
+
+    def get_sink(self, dataset_id: str, version: str, sink_id: str) -> dict:
+        sinks = self.get_sinks(dataset_id, version)
+        return self.get_sink_from_sink_list(sinks, sink_id)
+
+    def get_sink_from_event_stream(self, event_stream: EventStream, sink_id: str) -> dict:
+        sinks = event_stream.sinks
+        return self.get_sink_from_sink_list(sinks, sink_id)
 
     def get_sink_for_api(self, dataset_id: str, version: str, sink_id: str) -> dict:
         existing_sink = self.get_sink(dataset_id, version, sink_id)
@@ -102,10 +109,12 @@ class SinkService(EventService):
         if event_stream.deleted:
             raise ResourceNotFound
 
-        sink = self.get_sink(dataset_id, version, sink_id)
+        sink = self.get_sink_from_event_stream(event_stream, sink_id)
         if sink.cf_status == "CREATE_IN_PROGRESS":
             raise ResourceUnderConstruction
         sink.cf_status = "DELETE_IN_PROGRESS"
         sink.deleted = True
+        sink.updated_by = updated_by
+        sink.updated_at = datetime_utils.utc_now_with_timezone()
         self.cloudformation_client.delete_stack(sink.cf_stack_name)
         self.update_event_stream(event_stream, updated_by)

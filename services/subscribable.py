@@ -69,6 +69,8 @@ class SubscribableService(EventService):
 
         event_stream.subscribable.cf_status = "DELETE_IN_PROGRESS"
         event_stream.subscribable.enabled = False
+        event_stream.subscribable.updated_by = updated_by
+        event_stream.subscribable.updated_at = datetime_utils.utc_now_with_timezone()
 
         self.update_event_stream(event_stream, updated_by)
 
