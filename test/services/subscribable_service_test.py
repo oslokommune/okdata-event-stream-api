@@ -12,7 +12,7 @@ from services.exceptions import (
     ParentResourceNotReady,
     ResourceConflict,
 )
-from services.subscribable import generate_subscribable_cf_template
+from services.template import SubscribableTemplate
 
 from test import test_utils
 import test.test_data.subscribable as test_data
@@ -120,12 +120,11 @@ def test_disable_subscribable(mock_boto, mock_dataset):
 
 
 def test_generate_subscribable_cf_template():
-    subscribable_template = generate_subscribable_cf_template(
-        test_data.dataset_id, test_data.version, test_data.confidentiality
-    )
+    dataset = {"Id": test_data.dataset_id, "confidentiality": test_data.confidentiality}
+    template = SubscribableTemplate(dataset, test_data.version)
+    subscribable_template = template.generate_stack_template()
 
     test_utils.validate_cf_template(subscribable_template.json())
-
     assert (
         json.loads(subscribable_template.json()) == test_data.subscribable_cf_template
     )
@@ -135,6 +134,6 @@ def test_generate_subscribable_cf_template():
 def mock_dataset(monkeypatch):
     def get_dataset(self, id):
         if id == test_data.dataset_id:
-            return {"confidentiality": test_data.confidentiality}
+            return {"Id": id, "confidentiality": test_data.confidentiality}
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)
