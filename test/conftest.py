@@ -33,12 +33,6 @@ def initialize_parameter_store():
         Type="String",
     )
     ssm_client.put_parameter(
-        Name="/dataplatform/shared/keycloak-realm",
-        Description="A test parameter",
-        Value="api-catalog",
-        Type="String",
-    )
-    ssm_client.put_parameter(
         Name="/dataplatform/event-stream-api/keycloak-client-secret",
         Description="A test parameter",
         Value="supersecretpassword",

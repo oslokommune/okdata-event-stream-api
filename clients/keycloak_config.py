@@ -20,18 +20,15 @@ def get_keycloak_config():
 
     server_url_ssm_name = "/dataplatform/shared/keycloak-server-url"
 
-    realm_name_ssm_name = "/dataplatform/shared/keycloak-realm"
-
     parameters = ssm_client.get_ssm_parameters(
-        [client_secret_ssm_name, server_url_ssm_name, realm_name_ssm_name],
-        with_decryption=True,
+        [client_secret_ssm_name, server_url_ssm_name], with_decryption=True,
     )
 
     return KeycloakConfig(
         client_id=client_id,
         client_secret=parameters[client_secret_ssm_name],
         server_url=parameters[server_url_ssm_name],
-        realm_name=parameters[realm_name_ssm_name],
+        realm_name=os.environ.get("KEYCLOAK_REALM", "api-catalog"),
     )
 
 
