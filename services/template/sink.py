@@ -92,9 +92,7 @@ class SinkTemplate:
         return role_name[0:64]
 
     def get_iam_policy_name(self, key) -> str:
-        policy_name = (
-            f"streams-{self.dataset['Id']}-{self.version}-{self.sink.id}-{key}"
-        )
+        policy_name = f"stream-{self.dataset['Id']}-{self.version}-{self.sink.id}-{key}"
         return policy_name[0:128]
 
     ##### Main template #####

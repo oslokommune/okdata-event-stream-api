@@ -70,7 +70,7 @@ sink_elasticsearch_cf_template = {
                 },
                 "Policies": [
                     {
-                        "PolicyName": f"streams-{dataset_id}-{version}-{elasticsearch_sink_id}-es",
+                        "PolicyName": f"stream-{dataset_id}-{version}-{elasticsearch_sink_id}-es",
                         "PolicyDocument": {
                             "Statement": [
                                 {
@@ -127,7 +127,7 @@ sink_elasticsearch_cf_template = {
                 },
                 "Policies": [
                     {
-                        "PolicyName": f"streams-{dataset_id}-{version}-{elasticsearch_sink_id}-backup",
+                        "PolicyName": f"stream-{dataset_id}-{version}-{elasticsearch_sink_id}-backup",
                         "PolicyDocument": {
                             "Statement": [
                                 {
@@ -197,7 +197,7 @@ sink_s3_cf_template = {
                 },
                 "Policies": [
                     {
-                        "PolicyName": f"streams-{dataset_id}-{version}-{s3_sink_id}-s3",
+                        "PolicyName": f"stream-{dataset_id}-{version}-{s3_sink_id}-s3",
                         "PolicyDocument": {
                             "Statement": [
                                 {
