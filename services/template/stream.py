@@ -3,10 +3,9 @@ from database import StackTemplate
 
 ENV = os.environ["ORIGO_ENVIRONMENT"]
 
-# TODO: Enable/remove flag when https://jira.oslo.kommune.no/browse/DP-964 is done
-create_pipeline_triggers = False
-
-pipeline_router_lambda_name = f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route"
+pipeline_router_lambda_name = (
+    f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route-kinesis"
+)
 
 
 class EventStreamTemplate:
@@ -28,17 +27,15 @@ class EventStreamTemplate:
         if self.create_raw:
             raw_stream_name = self.get_stream_name(stage="raw")
             resources["RawDataStream"] = self.stream_resource(raw_stream_name)
-            if create_pipeline_triggers:
-                resources["RawPipelineTrigger"] = self.pipeline_trigger_resource(
-                    raw_stream_name
-                )
+            resources["RawPipelineTrigger"] = self.pipeline_trigger_resource(
+                raw_stream_name, depends_on="RawDataStream"
+            )
 
         processed_stream_name = self.get_stream_name(stage="processed")
         resources["ProcessedDataStream"] = self.stream_resource(processed_stream_name)
-        if create_pipeline_triggers:
-            resources["ProcessedPipelineTrigger"] = self.pipeline_trigger_resource(
-                processed_stream_name
-            )
+        resources["ProcessedPipelineTrigger"] = self.pipeline_trigger_resource(
+            processed_stream_name, depends_on="ProcessedDataStream"
+        )
 
         return StackTemplate(
             **{
@@ -57,7 +54,7 @@ class EventStreamTemplate:
             },
         }
 
-    def pipeline_trigger_resource(self, stream_name: str) -> dict:
+    def pipeline_trigger_resource(self, stream_name: str, depends_on: str) -> dict:
         return {
             "Type": "AWS::Lambda::EventSourceMapping",
             "Properties": {
@@ -73,4 +70,5 @@ class EventStreamTemplate:
                 },
                 "StartingPosition": "LATEST",
             },
+            "DependsOn": depends_on,
         }

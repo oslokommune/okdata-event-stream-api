@@ -25,19 +25,9 @@ class BaseStackModel(BaseModel):
             return string.capitalize()
 
 
-class StackResourceTag(BaseStackModel):
-    key: str = Field(max_length=128)
-    value: str = Field(max_length=256)
-
-
-class StackResource(BaseStackModel):
-    type: str
-    properties: dict
-
-
 class StackTemplate(BaseStackModel):
     description: str
-    resources: Dict[str, StackResource]
+    resources: Dict[str, dict]
 
 
 class Stack(BaseModel):

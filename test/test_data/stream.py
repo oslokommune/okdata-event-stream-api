@@ -30,10 +30,11 @@ processed_and_raw_cf_template = {
                     + f"dp.{confidentiality}.{dataset_id}.raw.{version}.json"
                 },
                 "FunctionName": {
-                    "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route"
+                    "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route-kinesis"
                 },
                 "StartingPosition": "LATEST",
             },
+            "DependsOn": "RawDataStream",
         },
         "ProcessedDataStream": {
             "Type": "AWS::Kinesis::Stream",
@@ -53,10 +54,11 @@ processed_and_raw_cf_template = {
                     + f"dp.{confidentiality}.{dataset_id}.processed.{version}.json"
                 },
                 "FunctionName": {
-                    "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route"
+                    "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route-kinesis"
                 },
                 "StartingPosition": "LATEST",
             },
+            "DependsOn": "ProcessedDataStream",
         },
     },
 }
@@ -82,10 +84,11 @@ processed_only_template = {
                     + f"dp.{confidentiality}.{dataset_id}.processed.{version}.json"
                 },
                 "FunctionName": {
-                    "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route"
+                    "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route-kinesis"
                 },
                 "StartingPosition": "LATEST",
             },
+            "DependsOn": "ProcessedDataStream",
         },
     },
 }

@@ -38,12 +38,12 @@ class EventStreamService(EventService):
         event_stream.cf_status = "CREATE_IN_PROGRESS"
         event_stream.cf_stack_name = event_stream.get_stack_name()
 
-        self.event_streams_table.put_event_stream(event_stream)
         self.cloudformation_client.create_stack(
             name=event_stream.cf_stack_name,
             template=event_stream.cf_stack_template.json(),
             tags=[{"Key": "created_by", "Value": updated_by}],
         )
+        self.event_streams_table.put_event_stream(event_stream)
         return event_stream
 
     def delete_event_stream(self, dataset_id, version, updated_by):
@@ -59,9 +59,8 @@ class EventStreamService(EventService):
 
         event_stream.deleted = True
         event_stream.cf_status = "DELETE_IN_PROGRESS"
-        self.update_event_stream(event_stream, updated_by)
-
         self.cloudformation_client.delete_stack(event_stream.cf_stack_name)
+        self.update_event_stream(event_stream, updated_by)
 
 
 def sub_resources_exist(event_stream: EventStream):
