@@ -87,13 +87,17 @@ class SinkTemplate:
         )
         return permission_boundary_arn
 
-    def get_iam_role_name(self, key) -> str:
-        role_name = f"stream-{self.dataset['Id']}-{self.version}-{self.sink.id}-{key}"
-        return role_name[0:64]
+    def get_iam_role_name(self, key):
+        return self.get_iam_name(key, 64)
 
-    def get_iam_policy_name(self, key) -> str:
-        policy_name = f"stream-{self.dataset['Id']}-{self.version}-{self.sink.id}-{key}"
-        return policy_name[0:128]
+    def get_iam_policy_name(self, key):
+        return self.get_iam_name(key, 128)
+
+    def get_iam_name(self, key, max_length) -> str:
+        prefix = f"stream-{self.dataset['Id']}"
+        suffix = f"-{self.version}-{self.sink.id}-{key}"
+        prefix_length = max_length - len(suffix)
+        return prefix[0:prefix_length] + suffix
 
     ##### Main template #####
     def generate_stack_template(self) -> StackTemplate:
