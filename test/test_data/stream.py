@@ -32,6 +32,7 @@ processed_and_raw_cf_template = {
                 "FunctionName": {
                     "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route-kinesis"
                 },
+                "MaximumBatchingWindowInSeconds": 10,
                 "StartingPosition": "LATEST",
             },
             "DependsOn": "RawDataStream",
@@ -56,6 +57,7 @@ processed_and_raw_cf_template = {
                 "FunctionName": {
                     "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route-kinesis"
                 },
+                "MaximumBatchingWindowInSeconds": 10,
                 "StartingPosition": "LATEST",
             },
             "DependsOn": "ProcessedDataStream",
@@ -86,6 +88,7 @@ processed_only_template = {
                 "FunctionName": {
                     "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:pipeline-router-localdev-route-kinesis"
                 },
+                "MaximumBatchingWindowInSeconds": 10,
                 "StartingPosition": "LATEST",
             },
             "DependsOn": "ProcessedDataStream",

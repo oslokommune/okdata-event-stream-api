@@ -16,6 +16,7 @@ class EventStreamTemplate:
         self.create_raw = create_raw
         self.shard_count = 1
         self.batch_size = 10
+        self.batch_window = 10
 
     def get_stream_name(self, stage) -> str:
         confidentiality = self.dataset["confidentiality"]
@@ -68,6 +69,7 @@ class EventStreamTemplate:
                     "Fn::Sub": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:"
                     + pipeline_router_lambda_name
                 },
+                "MaximumBatchingWindowInSeconds": self.batch_window,
                 "StartingPosition": "LATEST",
             },
             "DependsOn": depends_on,
