@@ -59,7 +59,7 @@ class SinkTemplate:
         return index.lower()  # ES indexes MUST be lower
 
     def get_elasticsearch_destination_domain(self) -> str:
-        return "dataplatform-event-sink"
+        return "dataplatform-eventdata"
 
     def get_elasticsearch_destination_arn(self) -> str:
         domain = self.get_elasticsearch_destination_domain()
