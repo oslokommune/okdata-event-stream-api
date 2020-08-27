@@ -21,7 +21,8 @@ def get_keycloak_config():
     server_url_ssm_name = "/dataplatform/shared/keycloak-server-url"
 
     parameters = ssm_client.get_ssm_parameters(
-        [client_secret_ssm_name, server_url_ssm_name], with_decryption=True,
+        [client_secret_ssm_name, server_url_ssm_name],
+        with_decryption=True,
     )
 
     return KeycloakConfig(

@@ -99,7 +99,9 @@ class TestPostStreamSinkResource:
         mock_authorizer,
     ):
         response = mock_client.post(
-            f"/{dataset_id}/{version}/sinks", json={"type": "s3"}, headers=auth_header,
+            f"/{dataset_id}/{version}/sinks",
+            json={"type": "s3"},
+            headers=auth_header,
         )
         data = json.loads(response.data)
         assert response.status_code == 409

@@ -47,7 +47,8 @@ class TestPostStreamResource:
 
     def test_post_401_invalid_token(self, mock_client, mock_keycloak, mock_authorizer):
         response = mock_client.post(
-            f"/{dataset_id}/{version}", headers={"Authorization": "bearer blablabla"},
+            f"/{dataset_id}/{version}",
+            headers={"Authorization": "bearer blablabla"},
         )
         assert response.status_code == 401
         assert json.loads(response.data) == {"message": "Invalid access token"}
@@ -124,7 +125,8 @@ class TestDeleteStreamResource:
 
     def test_delete_401(self, mock_client, mock_keycloak, mock_authorizer):
         response = mock_client.delete(
-            f"/{dataset_id}/{version}", headers={"Authorization": "bearer blablabla"},
+            f"/{dataset_id}/{version}",
+            headers={"Authorization": "bearer blablabla"},
         )
         assert response.status_code == 401
         assert json.loads(response.data) == {"message": "Invalid access token"}
