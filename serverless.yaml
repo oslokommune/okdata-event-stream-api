@@ -40,6 +40,7 @@ functions:
     events:
       - http: ANY /
       - http: "ANY {proxy+}"
+    timeout: 29
   update_cf_status:
     handler: notifications.sns_handler.handle
     events:
