@@ -1,5 +1,6 @@
 import logging
 import json
+from flask import current_app
 from flask_restful import Resource, abort, reqparse
 from datetime import datetime
 
@@ -12,6 +13,7 @@ logger = logging.getLogger()
 # Returns the countnumber based on provided dates
 class StreamStatisticsResource(Resource):
     def __init__(self):
+        self.query_service = ElasticsearchDataService(current_app.dataset_client)
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from_date", type=str)
         self.parser.add_argument("to_date", type=str)
@@ -41,9 +43,9 @@ class StreamStatisticsResource(Resource):
         logger.info(
             f"Getting count event with id: {dataset_id}-{version} from {from_date} to {to_date}"
         )
-        event_history = ElasticsearchDataService()
+
         if type == "count":
-            data = event_history.get_event_count(
+            data = self.query_service.get_event_count(
                 dataset_id, version, from_date, to_date
             )
         if not data:
