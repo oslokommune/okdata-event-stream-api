@@ -21,7 +21,7 @@ provider:
     GIT_REV: ${git:branch}:${git:sha1}
     VERSION: ${self:custom.version}
     ORIGO_ENVIRONMENT: ${self:provider.stage}
-    ES_API_ENDPOINT: ${ssm:/dataplatform/event-stream-api/eventdata-elasticsearch-endpoint}
+    ES_API_ENDPOINT: ${ssm:/dataplatform/shared/eventdata-elasticsearch-endpoint}
 package:
   exclude:
     - "**/*"
@@ -40,6 +40,7 @@ functions:
     events:
       - http: ANY /
       - http: "ANY {proxy+}"
+    timeout: 29
   update_cf_status:
     handler: notifications.sns_handler.handle
     events:

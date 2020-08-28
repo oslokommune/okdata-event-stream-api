@@ -25,7 +25,7 @@ sink_elasticsearch_cf_template = {
                 "ElasticsearchDestinationConfiguration": {
                     "BufferingHints": {"IntervalInSeconds": 300, "SizeInMBs": 1},
                     "DomainARN": {
-                        "Fn::Sub": "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/dataplatform-event-sink"
+                        "Fn::Sub": "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/dataplatform-eventdata"
                     },
                     "IndexName": f"processed-green-{dataset_id}-{version}",
                     "IndexRotationPeriod": "OneMonth",
@@ -89,14 +89,14 @@ sink_elasticsearch_cf_template = {
                                     "Effect": "Allow",
                                     "Action": ["es:DescribeElasticsearchDomain"],
                                     "Resource": {
-                                        "Fn::Sub": "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/dataplatform-event-sink"
+                                        "Fn::Sub": "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/dataplatform-eventdata"
                                     },
                                 },
                                 {
                                     "Effect": "Allow",
                                     "Action": ["es:ESHttpPost"],
                                     "Resource": {
-                                        "Fn::Sub": f"arn:aws:es:${{AWS::Region}}:${{AWS::AccountId}}:domain/dataplatform-event-sink/processed-green-{dataset_id}-{version}*"
+                                        "Fn::Sub": f"arn:aws:es:${{AWS::Region}}:${{AWS::AccountId}}:domain/dataplatform-eventdata/processed-green-{dataset_id}-{version}*"
                                     },
                                 },
                             ]

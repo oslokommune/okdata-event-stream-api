@@ -1,5 +1,6 @@
 import logging
 import json
+from flask import current_app
 from flask_restful import Resource, abort, reqparse
 from datetime import datetime
 
@@ -12,6 +13,7 @@ logger = logging.getLogger()
 # Returns events based on provided dates
 class StreamEventResource(Resource):
     def __init__(self):
+        self.query_service = ElasticsearchDataService(current_app.dataset_client)
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from_date", type=str)
         self.parser.add_argument("to_date", type=str)
@@ -36,8 +38,9 @@ class StreamEventResource(Resource):
         logger.info(
             f"Getting history about event with id: {dataset_id}-{version} from {from_date} to {to_date}"
         )
-        event_history = ElasticsearchDataService()
-        data = event_history.get_event_by_date(dataset_id, version, from_date, to_date)
+        data = self.query_service.get_event_by_date(
+            dataset_id, version, from_date, to_date
+        )
         if not data:
             abort(400, message=f"Could not find event: {dataset_id}/{version}")
         return json.dumps(data)

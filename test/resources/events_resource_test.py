@@ -61,7 +61,9 @@ def mock_event_data(monkeypatch):
         return event_dummy_data
 
     monkeypatch.setattr(
-        ElasticsearchDataService, "get_event_by_date", get_event_by_date,
+        ElasticsearchDataService,
+        "get_event_by_date",
+        get_event_by_date,
     )
 
 
@@ -71,5 +73,7 @@ def mock_event_no_data(monkeypatch):
         return None
 
     monkeypatch.setattr(
-        ElasticsearchDataService, "get_event_by_date", get_event_by_date,
+        ElasticsearchDataService,
+        "get_event_by_date",
+        get_event_by_date,
     )

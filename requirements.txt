@@ -4,6 +4,7 @@
 #
 #    pip-compile --extra-index-url=***REMOVED***
 #
+--extra-index-url ***REMOVED***
 
 aniso8601==8.0.0          # via flask-restful
 attrs==19.3.0             # via jsonschema
@@ -16,7 +17,6 @@ elasticsearch==7.8.1      # via elasticsearch-dsl
 flask-restful==0.3.8      # via event-streams-api (setup.py)
 flask==1.1.2              # via event-streams-api (setup.py), flask-restful
 idna==2.10                # via requests
-importlib-metadata==1.7.0  # via jsonschema
 itsdangerous==1.1.0       # via flask
 jinja2==2.11.1            # via flask
 jsonschema==3.2.0         # via origo-sdk-python
@@ -31,13 +31,13 @@ python-dateutil==2.8.1    # via elasticsearch-dsl
 python-jose==3.1.0        # via python-keycloak
 python-keycloak==0.21.0   # via origo-sdk-python
 pytz==2019.3              # via flask-restful
-requests==2.24.0          # via origo-sdk-python, python-keycloak
+requests-aws4auth==1.0    # via event-streams-api (setup.py)
+requests==2.24.0          # via origo-sdk-python, python-keycloak, requests-aws4auth
 rsa==4.6                  # via python-jose
 shortuuid==1.0.1          # via event-streams-api (setup.py)
 six==1.14.0               # via ecdsa, elasticsearch-dsl, flask-restful, jsonschema, pyrsistent, python-dateutil, python-jose
 urllib3==1.25.9           # via elasticsearch, origo-sdk-python, requests
 werkzeug==1.0.1           # via flask
-zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

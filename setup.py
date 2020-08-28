@@ -24,5 +24,6 @@ setup(
         "origo-sdk-python==0.2.3",
         "shortuuid",
         "elasticsearch-dsl==7.2.1",
+        "requests-aws4auth==1.0",
     ],
 )
