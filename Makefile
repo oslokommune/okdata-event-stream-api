@@ -9,7 +9,7 @@
 .DEV_PROFILE := saml-origo-dev
 .PROD_PROFILE := saml-dataplatform-prod
 
-PY_VERSION := 3.7
+PY_VERSION := 3
 GLOBAL_PY := python$(PY_VERSION)
 BUILD_VENV ?= .build_venv
 BUILD_PY := $(BUILD_VENV)/bin/python
