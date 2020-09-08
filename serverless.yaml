@@ -22,6 +22,7 @@ provider:
     VERSION: ${self:custom.version}
     ORIGO_ENVIRONMENT: ${self:provider.stage}
     ES_API_ENDPOINT: ${ssm:/dataplatform/shared/eventdata-elasticsearch-endpoint}
+    API_GATEWAY_BASE_PATH: streams
 package:
   exclude:
     - "**/*"
