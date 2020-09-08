@@ -8,7 +8,10 @@ from enum import Enum
 from services import datetime_utils
 
 
-class BaseStackModel(BaseModel):
+class StackTemplate(BaseModel):
+    description: str
+    resources: Dict[str, dict]
+
     def json(self, *args, **kwargs):
         kwargs["by_alias"] = True
         return super().json(*args, **kwargs)
@@ -25,14 +28,9 @@ class BaseStackModel(BaseModel):
             return string.capitalize()
 
 
-class StackTemplate(BaseStackModel):
-    description: str
-    resources: Dict[str, dict]
-
-
 class Stack(BaseModel):
     cf_stack_template: StackTemplate = None
-    cf_status: str = Field("INACTIVE", max_length=20)
+    cf_status: str = Field("INACTIVE", max_length=20, alias="status")
     cf_stack_name: str = None
     updated_by: str = None  # Remove None when all DynamoDB in dev have this field ;)
     updated_at: datetime = Field(
@@ -47,14 +45,8 @@ class Stack(BaseModel):
     def make_uppercase(cls, v):
         return v.upper()
 
-    # TODO: Ensure that template is set on status change?
-    # @validator("cf_status", allow_reuse=True)
-    # def ensure_template(cls, v, values):
-    #     if v != "INACTIVE" and not values["cf_stack_template"]:
-    #         raise ValueError('template must be set')
-    #     return v
-
     class Config:
+        allow_population_by_field_name = True
         validate_assignment = True
 
 

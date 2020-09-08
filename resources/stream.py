@@ -46,7 +46,20 @@ class StreamResource(Resource):
             logger.exception(e)
             abort(500, message="Server error")
 
-        return event_stream.json(), 201
+        return (
+            event_stream.dict(
+                include={
+                    "id",
+                    "create_raw",
+                    "updated_by",
+                    "updated_at",
+                    "deleted",
+                    "cf_status",
+                },
+                by_alias=True,
+            ),
+            201,
+        )
 
     @auth.accepts_token
     @auth.requires_dataset_ownership
@@ -68,7 +81,7 @@ class StreamResource(Resource):
                 "cf_status",
             },
             update={"confidentiality": dataset["confidentiality"]},
-        ).json()
+        ).dict(by_alias=True)
 
     def put(self, dataset_id, version):
         abort(501)

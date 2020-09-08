@@ -1,6 +1,6 @@
 import logging
 from flask_restful import abort
-from flask import request, current_app, g, jsonify
+from flask import request, current_app, g
 
 from resources import Resource
 from resources.authorizer import auth
@@ -34,7 +34,11 @@ class SinkResource(Resource):
     @auth.requires_dataset_version_exists
     def get(self, dataset_id, version, sink_id):
         try:
-            return self.sink_service.get_sink_for_api(dataset_id, version, sink_id)
+            sink = self.sink_service.get_sink(dataset_id, version, sink_id)
+            return sink.dict(
+                include={"id", "type", "cf_status", "updated_by", "updated_at"},
+                by_alias=True,
+            )
         except SubResourceNotFound:
             response_msg = f"sink {sink_id} does not exist on {dataset_id}/{version}"
             abort(404, message=response_msg)
@@ -83,7 +87,13 @@ class SinksResource(Resource):
         try:
             data = request.get_json()
             sink = self.sink_service.add_sink(dataset_id, version, data, g.principal_id)
-            return {"type": sink.type, "id": sink.id}, 201
+            return (
+                sink.dict(
+                    include={"id", "type", "cf_status", "updated_by", "updated_at"},
+                    by_alias=True,
+                ),
+                201,
+            )
         except KeyError as e:
             response_msg = f"Invalid sink type: {data['type']}"
             logger.exception(e)
@@ -109,8 +119,15 @@ class SinksResource(Resource):
     @auth.requires_dataset_version_exists
     def get(self, dataset_id, version):
         try:
-            sinks = self.sink_service.get_sinks_for_api(dataset_id, version)
-            return jsonify(sinks)
+            sinks = self.sink_service.get_sinks(dataset_id, version)
+            return [
+                sink.dict(
+                    include={"id", "type", "cf_status", "updated_by", "updated_at"},
+                    by_alias=True,
+                )
+                for sink in sinks
+                if not sink.deleted
+            ]
         except Exception as e:
             response_msg = f"Could not get sink list: {str(e)}"
             logger.exception(e)

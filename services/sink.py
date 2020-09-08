@@ -10,17 +10,6 @@ from services import (
 )
 from services.template import SinkTemplate
 
-# Do not expose all internal information about a sink, just the ones
-# needed for the owner of the sink
-API_FIELDS_SINK = {"id": "id", "type": "type", "cf_status": "status"}
-
-
-def sink_for_api(sink: dict) -> dict:
-    ret = {}
-    for key in API_FIELDS_SINK:
-        ret[API_FIELDS_SINK[key]] = getattr(sink, key)
-    return ret
-
 
 class SinkService(EventService):
     def get_sinks(self, dataset_id: str, version: str) -> list:
@@ -28,15 +17,6 @@ class SinkService(EventService):
         if not event_stream.sinks:
             return []
         return event_stream.sinks
-
-    def get_sinks_for_api(self, dataset_id: str, version: str) -> list:
-        sinks = self.get_sinks(dataset_id, version)
-        sink_list = []
-        for sink in sinks:
-            if sink.deleted:
-                continue
-            sink_list.append(sink_for_api(sink))
-        return sink_list
 
     def get_sink_from_sink_list(self, sinks: list, sink_id) -> dict:
         for sink in sinks:
@@ -55,10 +35,6 @@ class SinkService(EventService):
     ) -> dict:
         sinks = event_stream.sinks
         return self.get_sink_from_sink_list(sinks, sink_id)
-
-    def get_sink_for_api(self, dataset_id: str, version: str, sink_id: str) -> dict:
-        existing_sink = self.get_sink(dataset_id, version, sink_id)
-        return sink_for_api(existing_sink)
 
     def check_for_existing_sink_type(
         self, event_stream: EventStream, sink_type: SinkType

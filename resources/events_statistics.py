@@ -1,5 +1,4 @@
 import logging
-import json
 from flask import current_app
 from flask_restful import Resource, abort, reqparse
 from datetime import datetime
@@ -50,4 +49,4 @@ class StreamStatisticsResource(Resource):
             )
         if not data:
             abort(400, message=f"Could not find event: {dataset_id}/{version}")
-        return json.dumps(data)
+        return data

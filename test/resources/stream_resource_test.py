@@ -29,7 +29,14 @@ class TestPostStreamResource:
         )
 
         assert response.status_code == 201
-        assert json.loads(response.data) == json.loads(test_data.event_stream.json())
+        assert json.loads(response.data) == {
+            "id": test_data.event_stream.id,
+            "create_raw": test_data.event_stream.create_raw,
+            "updated_by": test_data.event_stream.updated_by,
+            "updated_at": str(test_data.event_stream.updated_at),
+            "deleted": test_data.event_stream.deleted,
+            "status": test_data.event_stream.cf_status,
+        }
 
     def test_post_not_create_raw(
         self, mock_client, mock_event_stream_service, mock_keycloak, mock_authorizer

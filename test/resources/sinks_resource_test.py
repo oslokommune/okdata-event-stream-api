@@ -31,6 +31,7 @@ class TestPostStreamSinkResource:
         data = json.loads(response.data)
 
         assert response.status_code == 201
+        assert data.keys() == {"id", "type", "status", "updated_by", "updated_at"}
         assert data["type"] == "s3"
         assert len(data["id"]) == 5
 
@@ -162,6 +163,7 @@ class TestGetStreamSinkResource:
         data = json.loads(response.data)
         assert response.status_code == 200
         assert len(data) == 1
+        assert data[0].keys() == {"id", "type", "status", "updated_by", "updated_at"}
 
     def test_get_200_sink(
         self,
@@ -175,6 +177,7 @@ class TestGetStreamSinkResource:
             f"/{dataset_id}/{version}/sinks/fffff", headers=auth_header
         )
         data = json.loads(response.data)
+        assert data.keys() == {"id", "type", "status", "updated_by", "updated_at"}
         assert response.status_code == 200
         assert data["id"] == "fffff"
 

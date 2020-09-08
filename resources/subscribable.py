@@ -36,7 +36,9 @@ class SubscribableResource(Resource):
             logger.exception(e)
             abort(500, message="Server error")
 
-        return subscribable.json(exclude={"cf_stack_template"})
+        return subscribable.dict(
+            include={"cf_status", "updated_by", "updated_at", "enabled"}, by_alias=True
+        )
 
     @auth.accepts_token
     @auth.requires_dataset_ownership
@@ -79,4 +81,6 @@ class SubscribableResource(Resource):
             logger.exception(e)
             abort(500, message="Server error")
 
-        return subscribable.json(exclude={"cf_stack_template"})
+        return subscribable.dict(
+            include={"cf_status", "updated_by", "updated_at", "enabled"}, by_alias=True
+        )

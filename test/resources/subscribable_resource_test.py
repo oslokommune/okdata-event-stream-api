@@ -24,11 +24,12 @@ def test_get_200(mock_client, mock_subscribable_service, mock_keycloak):
     )
 
     assert response.status_code == 200
-    assert json.loads(response.data) == json.loads(
-        test_data.subscribable_event_stream.subscribable.json(
-            exclude={"cf_stack_template"}
-        )
-    )
+    assert json.loads(response.data).keys() == {
+        "status",
+        "updated_by",
+        "updated_at",
+        "enabled",
+    }
 
 
 def test_get_401_invalid_token(mock_client, mock_keycloak):
@@ -76,11 +77,12 @@ def test_put_200(
     )
 
     assert enabled_response.status_code == 200
-    assert json.loads(enabled_response.data) == json.loads(
-        test_data.subscribable_event_stream.subscribable.json(
-            exclude={"cf_stack_template"}
-        )
-    )
+    assert json.loads(enabled_response.data).keys() == {
+        "status",
+        "updated_by",
+        "updated_at",
+        "enabled",
+    }
 
     disabled_response = mock_client.put(
         f"/{dataset_id}/{version}/subscribable",
@@ -92,10 +94,13 @@ def test_put_200(
         self=ANY, dataset_id=dataset_id, version=version, updated_by=username
     )
 
-    assert enabled_response.status_code == 200
-    assert json.loads(disabled_response.data) == json.loads(
-        test_data.event_stream.subscribable.json(exclude={"cf_stack_template"})
-    )
+    assert disabled_response.status_code == 200
+    assert json.loads(disabled_response.data).keys() == {
+        "status",
+        "updated_by",
+        "updated_at",
+        "enabled",
+    }
 
 
 def test_put_401_invalid_token(mock_client, mock_keycloak, mock_authorizer):

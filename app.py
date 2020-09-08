@@ -10,7 +10,7 @@ from resources.authorizer import auth
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
-api = Api(app)
+api = Api(app, catch_all_404s=True)
 
 app.dataset_client = setup_origo_sdk(auth.config, Dataset)
 

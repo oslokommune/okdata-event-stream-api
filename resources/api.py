@@ -1,5 +1,6 @@
 import json
 import logging
+import datetime
 from flask import current_app, make_response
 from flask_restful import Api, Resource
 
@@ -26,9 +27,17 @@ class Api(Api):
         }
 
 
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return str(obj)
+        elif isinstance(obj, datetime.date):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
+
+
 def output_json(data, code, headers=None):
-    if isinstance(data, dict):
-        data = json.dumps(data)
+    data = json.dumps(data, cls=JSONEncoder)
     resp = make_response(data, code)
     resp.headers.extend(headers or {})
     return resp
