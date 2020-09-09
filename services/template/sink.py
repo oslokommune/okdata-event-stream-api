@@ -23,7 +23,7 @@ class SinkTemplate:
 
     def get_date_prefix(self) -> str:
         # https://docs.aws.amazon.com/firehose/latest/dev/s3-prefixes.html
-        return "year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}"
+        return "year=!{timestamp:yyyy}/month=!{timestamp:M}/day=!{timestamp:d}/hour=!{timestamp:H}"
 
     def get_error_output(self) -> str:
         return f"event-stream-sink/error/!{{firehose:error-output-type}}/{self.dataset['Id']}/{self.version}"

@@ -36,8 +36,8 @@ sink_elasticsearch_cf_template = {
                     "S3Configuration": {
                         "BucketARN": "arn:aws:s3:::ok-origo-dataplatform-localdev",
                         "BufferingHints": {"IntervalInSeconds": 300, "SizeInMBs": 1},
-                        "ErrorOutputPrefix": f"event-stream-sink/error/!{{firehose:error-output-type}}/{dataset_id}/{version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:MM}}/day=!{{timestamp:dd}}/hour=!{{timestamp:HH}}/",
-                        "Prefix": f"processed/green/{dataset_id}/version={version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:MM}}/day=!{{timestamp:dd}}/hour=!{{timestamp:HH}}/",
+                        "ErrorOutputPrefix": f"event-stream-sink/error/!{{firehose:error-output-type}}/{dataset_id}/{version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:M}}/day=!{{timestamp:d}}/hour=!{{timestamp:H}}/",
+                        "Prefix": f"processed/green/{dataset_id}/version={version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:M}}/day=!{{timestamp:d}}/hour=!{{timestamp:H}}/",
                         "RoleARN": {
                             "Fn::GetAtt": [
                                 "SinkElasticsearchS3BackupResourceIAM",
@@ -169,8 +169,8 @@ sink_s3_cf_template = {
                 "S3DestinationConfiguration": {
                     "BucketARN": "arn:aws:s3:::ok-origo-dataplatform-localdev",
                     "BufferingHints": {"IntervalInSeconds": 300, "SizeInMBs": 1},
-                    "ErrorOutputPrefix": f"event-stream-sink/error/!{{firehose:error-output-type}}/{dataset_id}/{version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:MM}}/day=!{{timestamp:dd}}/hour=!{{timestamp:HH}}/",
-                    "Prefix": f"processed/green/{dataset_id}/version={version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:MM}}/day=!{{timestamp:dd}}/hour=!{{timestamp:HH}}/",
+                    "ErrorOutputPrefix": f"event-stream-sink/error/!{{firehose:error-output-type}}/{dataset_id}/{version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:M}}/day=!{{timestamp:d}}/hour=!{{timestamp:H}}/",
+                    "Prefix": f"processed/green/{dataset_id}/version={version}/year=!{{timestamp:yyyy}}/month=!{{timestamp:M}}/day=!{{timestamp:d}}/hour=!{{timestamp:H}}/",
                     "RoleARN": {"Fn::GetAtt": ["SinkS3ResourceIAM", "Arn"]},
                 },
             },
