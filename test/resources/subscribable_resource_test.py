@@ -72,7 +72,7 @@ def test_put_200(
         json={"enabled": True},
     )
 
-    SubscribableService.enable_subscribable.assert_called_once_with(
+    SubscribableService.enable_subscription.assert_called_once_with(
         self=ANY, dataset_id=dataset_id, version=version, updated_by=username
     )
 
@@ -90,7 +90,7 @@ def test_put_200(
         json={"enabled": False},
     )
 
-    SubscribableService.disable_subscribable.assert_called_once_with(
+    SubscribableService.disable_subscription.assert_called_once_with(
         self=ANY, dataset_id=dataset_id, version=version, updated_by=username
     )
 
@@ -198,20 +198,20 @@ def mock_subscribable_service(monkeypatch, mocker):
     def get_subscribable(self, dataset_id, version):
         return test_data.subscribable_event_stream.subscribable
 
-    def enable_subscribable(self, dataset_id, version, updated_by):
+    def enable_subscription(self, dataset_id, version, updated_by):
         return test_data.subscribable_event_stream.subscribable
 
-    def disable_subscribable(self, dataset_id, version, updated_by):
+    def disable_subscription(self, dataset_id, version, updated_by):
         return test_data.event_stream.subscribable
 
     monkeypatch.setattr(SubscribableService, "get_subscribable", get_subscribable)
-    monkeypatch.setattr(SubscribableService, "enable_subscribable", enable_subscribable)
+    monkeypatch.setattr(SubscribableService, "enable_subscription", enable_subscription)
     monkeypatch.setattr(
-        SubscribableService, "disable_subscribable", disable_subscribable
+        SubscribableService, "disable_subscription", disable_subscription
     )
 
-    mocker.spy(SubscribableService, "enable_subscribable")
-    mocker.spy(SubscribableService, "disable_subscribable")
+    mocker.spy(SubscribableService, "enable_subscription")
+    mocker.spy(SubscribableService, "disable_subscription")
 
 
 @pytest.fixture()
@@ -220,8 +220,8 @@ def mock_subscribable_service_resource_not_found(monkeypatch):
         raise ResourceNotFound
 
     monkeypatch.setattr(SubscribableService, "get_subscribable", raise_not_found)
-    monkeypatch.setattr(SubscribableService, "enable_subscribable", raise_not_found)
-    monkeypatch.setattr(SubscribableService, "disable_subscribable", raise_not_found)
+    monkeypatch.setattr(SubscribableService, "enable_subscription", raise_not_found)
+    monkeypatch.setattr(SubscribableService, "disable_subscription", raise_not_found)
 
 
 @pytest.fixture()
@@ -229,8 +229,8 @@ def mock_subscribable_service_resource_conflict(monkeypatch):
     def raise_conflict(self, *args, **kwargs):
         raise ResourceConflict
 
-    monkeypatch.setattr(SubscribableService, "enable_subscribable", raise_conflict)
-    monkeypatch.setattr(SubscribableService, "disable_subscribable", raise_conflict)
+    monkeypatch.setattr(SubscribableService, "enable_subscription", raise_conflict)
+    monkeypatch.setattr(SubscribableService, "disable_subscription", raise_conflict)
 
 
 @pytest.fixture()
@@ -238,7 +238,7 @@ def mock_subscribable_service_parent_not_ready_conflict(monkeypatch):
     def raise_conflict(self, *args, **kwargs):
         raise ParentResourceNotReady
 
-    monkeypatch.setattr(SubscribableService, "enable_subscribable", raise_conflict)
+    monkeypatch.setattr(SubscribableService, "enable_subscription", raise_conflict)
 
 
 @pytest.fixture()
@@ -247,5 +247,5 @@ def mock_subscribable_service_server_error(monkeypatch):
         raise Exception
 
     monkeypatch.setattr(SubscribableService, "get_subscribable", raise_exception)
-    monkeypatch.setattr(SubscribableService, "enable_subscribable", raise_exception)
-    monkeypatch.setattr(SubscribableService, "disable_subscribable", raise_exception)
+    monkeypatch.setattr(SubscribableService, "enable_subscription", raise_exception)
+    monkeypatch.setattr(SubscribableService, "disable_subscription", raise_exception)

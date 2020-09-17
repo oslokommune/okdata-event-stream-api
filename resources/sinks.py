@@ -55,7 +55,7 @@ class SinkResource(Resource):
     def delete(self, dataset_id, version, sink_id):
         updated_by = g.principal_id
         try:
-            self.sink_service.delete_sink(dataset_id, version, sink_id, updated_by)
+            self.sink_service.disable_sink(dataset_id, version, sink_id, updated_by)
         except ResourceNotFound:
             response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
             abort(404, message=response_msg)
@@ -66,14 +66,14 @@ class SinkResource(Resource):
             abort(404, message=response_msg)
         except ResourceUnderConstruction:
             response_msg = (
-                f"Sink with {sink_id} cannot be deleted since it is being constructed"
+                f"Sink with {sink_id} cannot be disabled since it is being constructed"
             )
             abort(409, response_msg)
         except Exception as e:
             logger.exception(e)
             abort(500, message="Server error")
 
-        return {"message": f"Deleted sink {sink_id} from stream {dataset_id}/{version}"}
+        return {"message": f"Disabled sink {sink_id} for stream {dataset_id}/{version}"}
 
 
 class SinksResource(Resource):
@@ -86,7 +86,9 @@ class SinksResource(Resource):
     def post(self, dataset_id, version):
         try:
             data = request.get_json()
-            sink = self.sink_service.add_sink(dataset_id, version, data, g.principal_id)
+            sink = self.sink_service.enable_sink(
+                dataset_id, version, data, g.principal_id
+            )
             return (
                 sink.dict(
                     include={"id", "type", "cf_status", "updated_by", "updated_at"},

@@ -47,7 +47,7 @@ class SinkService(EventService):
                     f"Sink: {sink_type.value} already exists on {event_stream.id}"
                 )
 
-    def add_sink(
+    def enable_sink(
         self, dataset_id: str, version: str, sink_data: dict, updated_by: str
     ) -> Sink:
         event_stream = self.get_event_stream(dataset_id, version)
@@ -80,7 +80,9 @@ class SinkService(EventService):
         self.update_event_stream(event_stream, updated_by)
         return sink
 
-    def delete_sink(self, dataset_id: str, version: str, sink_id: str, updated_by: str):
+    def disable_sink(
+        self, dataset_id: str, version: str, sink_id: str, updated_by: str
+    ):
         event_stream = self.get_event_stream(dataset_id, version)
         if event_stream is None:
             raise ResourceNotFound

@@ -53,9 +53,9 @@ class SubscribableResource(Resource):
             abort(400, message="Bad request")
 
         service_call = (
-            self.subscribable_service.enable_subscribable
+            self.subscribable_service.enable_subscription
             if enabled
-            else self.subscribable_service.disable_subscribable
+            else self.subscribable_service.disable_subscription
         )
 
         try:

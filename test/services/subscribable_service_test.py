@@ -36,7 +36,7 @@ def test_get_subscribable(mock_boto):
 
 
 @freeze_time(test_data.utc_now)
-def test_enable_subscribable(mock_boto, mock_dataset):
+def test_enable_subscription(mock_boto, mock_dataset):
     event_stream = test_data.event_stream
     test_utils.create_event_streams_table(item_list=[json.loads(event_stream.json())])
 
@@ -44,7 +44,7 @@ def test_enable_subscribable(mock_boto, mock_dataset):
         setup_origo_sdk(test_data.ssm_parameters, Dataset)
     )
 
-    subscribable = subscribable_service.enable_subscribable(
+    subscribable = subscribable_service.enable_subscription(
         test_data.dataset_id, test_data.version, test_data.updated_by
     )
 
@@ -59,18 +59,18 @@ def test_enable_subscribable(mock_boto, mock_dataset):
     assert updated_event_stream.updated_at == date_parser.parse(test_data.utc_now)
 
     with pytest.raises(ResourceNotFound):
-        subscribable_service.enable_subscribable(
+        subscribable_service.enable_subscription(
             test_data.dataset_id, 3, test_data.updated_by
         )
 
     with pytest.raises(ResourceConflict):
-        subscribable_service.enable_subscribable(
+        subscribable_service.enable_subscription(
             test_data.dataset_id, test_data.version, test_data.updated_by
         )
 
 
 @freeze_time(test_data.utc_now)
-def test_enable_subscribable_parent_not_ready(mock_boto, mock_dataset):
+def test_enable_subscription_parent_not_ready(mock_boto, mock_dataset):
     event_stream = test_data.event_stream_not_ready
     test_utils.create_event_streams_table(item_list=[json.loads(event_stream.json())])
 
@@ -79,13 +79,13 @@ def test_enable_subscribable_parent_not_ready(mock_boto, mock_dataset):
     )
 
     with pytest.raises(ParentResourceNotReady):
-        subscribable_service.enable_subscribable(
+        subscribable_service.enable_subscription(
             test_data.dataset_id, test_data.version, test_data.updated_by
         )
 
 
 @freeze_time(test_data.utc_now)
-def test_disable_subscribable(mock_boto, mock_dataset):
+def test_disable_subscription(mock_boto, mock_dataset):
     event_stream = test_data.subscribable_event_stream
     test_utils.create_event_streams_table(item_list=[json.loads(event_stream.json())])
 
@@ -93,7 +93,7 @@ def test_disable_subscribable(mock_boto, mock_dataset):
         setup_origo_sdk(test_data.ssm_parameters, Dataset)
     )
 
-    subscribable = subscribable_service.disable_subscribable(
+    subscribable = subscribable_service.disable_subscription(
         test_data.dataset_id, test_data.version, test_data.updated_by
     )
 
@@ -108,12 +108,12 @@ def test_disable_subscribable(mock_boto, mock_dataset):
     assert updated_event_stream.updated_at == date_parser.parse(test_data.utc_now)
 
     with pytest.raises(ResourceNotFound):
-        subscribable_service.disable_subscribable(
+        subscribable_service.disable_subscription(
             test_data.dataset_id, 3, test_data.updated_by
         )
 
     with pytest.raises(ResourceConflict):
-        subscribable_service.disable_subscribable(
+        subscribable_service.disable_subscription(
             test_data.dataset_id, test_data.version, test_data.updated_by
         )
 

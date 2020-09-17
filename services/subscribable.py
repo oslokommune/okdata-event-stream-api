@@ -24,7 +24,7 @@ class SubscribableService(EventService):
 
         return event_stream.subscribable
 
-    def enable_subscribable(self, dataset_id, version, updated_by):
+    def enable_subscription(self, dataset_id, version, updated_by):
         event_stream = self.get_event_stream(dataset_id, version)
 
         if not event_stream or event_stream.deleted:
@@ -56,7 +56,7 @@ class SubscribableService(EventService):
 
         return event_stream.subscribable
 
-    def disable_subscribable(self, dataset_id, version, updated_by):
+    def disable_subscription(self, dataset_id, version, updated_by):
         event_stream = self.get_event_stream(dataset_id, version)
 
         if not event_stream or event_stream.deleted:

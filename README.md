@@ -46,18 +46,17 @@ export FLASK_RUN_PORT=8080
 
 Requires `saml2aws`
 
-## curl commands for the API
-Create a new event stream:
-  curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}
 
-Create a new event stream sink:
-    curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{"type":"s3"}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}/sinks
+## Usage
 
-Get all sinks:
-    curl -H "Authorization: bearer $TOKEN" -XGET http://127.0.0.1:8080/{dataset-id}/{version}/sinks
+### curl commands for the API
 
-Get a single sink:
-    curl -H "Authorization: bearer $TOKEN" -XGET http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_id}
+Create a new event stream: `curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}`
 
-Delete an event sink
-    curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" -XDELETE http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_id}
+Enable an event sink: `curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" --data '{"type":"s3"}' -XPOST http://127.0.0.1:8080/{dataset-id}/{version}/sinks`
+
+Get all sinks: `curl -H "Authorization: bearer $TOKEN" -XGET http://127.0.0.1:8080/{dataset-id}/{version}/sinks`
+
+Get a single sink: `curl -H "Authorization: bearer $TOKEN" -XGET http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_id}`
+
+Disable an event sink: `curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" -XDELETE http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_id}`
