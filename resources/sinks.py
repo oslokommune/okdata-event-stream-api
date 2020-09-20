@@ -1,9 +1,12 @@
 import logging
-from flask_restful import abort
-from flask import request, current_app, g
+from typing import List, Optional
+from datetime import datetime
+from fastapi import Depends, APIRouter, status
+from pydantic import BaseModel, Field
 
-from resources import Resource
-from resources.authorizer import auth
+from resources.authorizer import AuthInfo, dataset_owner, version_exists
+from resources.origo_clients import dataset_client
+from resources.errors import ErrorResponse, error_message_models
 from services import (
     SinkService,
     ResourceConflict,
@@ -15,137 +18,158 @@ from services import (
 
 logger = logging.getLogger()
 
-
-class SinkResource(Resource):
-    def __init__(self):
-        self.sink_service = SinkService(current_app.dataset_client)
-
-    def post(self, dataset_id, version):
-        abort(501)
-
-    @auth.accepts_token
-    @auth.requires_dataset_ownership
-    @auth.requires_dataset_version_exists
-    def put(self, dataset_id, version, sink_id):
-        abort(501)
-
-    @auth.accepts_token
-    @auth.requires_dataset_ownership
-    @auth.requires_dataset_version_exists
-    def get(self, dataset_id, version, sink_type):
-        try:
-            sink = self.sink_service.get_sink(dataset_id, version, sink_type)
-            return sink.dict(
-                include={"type", "cf_status", "updated_by", "updated_at"},
-                by_alias=True,
-            )
-        except KeyError as e:
-            response_msg = f"Invalid sink type: {sink_type}"
-            logger.exception(e)
-            abort(400, message=response_msg)
-        except SubResourceNotFound:
-            response_msg = (
-                f"Sink of type {sink_type} does not exist on {dataset_id}/{version}"
-            )
-            abort(404, message=response_msg)
-        except Exception as e:
-            response_msg = f"Could not get sink of type {sink_type} from event stream {dataset_id}/{version}"
-            logger.exception(e)
-            abort(500, message=response_msg)
-
-    @auth.accepts_token
-    @auth.requires_dataset_ownership
-    @auth.requires_dataset_version_exists
-    def delete(self, dataset_id, version, sink_type):
-        updated_by = g.principal_id
-        try:
-            self.sink_service.disable_sink(dataset_id, version, sink_type, updated_by)
-        except KeyError as e:
-            response_msg = f"Invalid sink type: {sink_type}"
-            logger.exception(e)
-            abort(400, message=response_msg)
-        except ResourceNotFound:
-            response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
-            abort(404, message=response_msg)
-        except SubResourceNotFound:
-            response_msg = (
-                f"Sink of type {sink_type} does not exist on {dataset_id}/{version}"
-            )
-            abort(404, message=response_msg)
-        except ResourceUnderConstruction:
-            response_msg = f"Sink of type {sink_type} cannot be disabled since it is being constructed"
-            abort(409, response_msg)
-        except Exception as e:
-            logger.exception(e)
-            abort(500, message="Server error")
-
-        return {
-            "message": f"Disabled sink of type {sink_type} for stream {dataset_id}/{version}"
-        }
+router = APIRouter()
 
 
-class SinksResource(Resource):
-    def __init__(self):
-        self.sink_service = SinkService(current_app.dataset_client)
+def sink_service(dataset_client=Depends(dataset_client)) -> SinkService:
+    return SinkService(dataset_client)
 
-    @auth.accepts_token
-    @auth.requires_dataset_ownership
-    @auth.requires_dataset_version_exists
-    def post(self, dataset_id, version):
-        try:
-            data = request.get_json()
-            sink_type = data["type"]
-            assert sink_type is not None
-        except Exception as e:
-            logger.exception(e)
-            abort(400, message="No sink type specified in request body")
 
-        try:
-            sink = self.sink_service.enable_sink(
-                dataset_id, version, sink_type, g.principal_id
-            )
-            return (
-                sink.dict(
-                    include={"type", "cf_status", "updated_by", "updated_at"},
-                    by_alias=True,
-                ),
-                201,
-            )
-        except KeyError as e:
-            response_msg = f"Invalid sink type: {sink_type}"
-            logger.exception(e)
-            abort(400, message=response_msg)
-        except ResourceConflict as rc:
-            response_msg = str(rc)
-            logger.exception(rc)
-            abort(409, message=response_msg)
-        except ResourceUnderDeletion:
-            response_msg = f"Cannot create sink since a sink of type {data['type']} currently is being deleted"
-            abort(409, message=response_msg)
-        except ResourceNotFound as e:
-            response_msg = f"Event stream {dataset_id}/{version} does not exist"
-            logger.exception(e)
-            abort(404, message=response_msg)
-        except Exception as e:
-            response_msg = f"Could not update event stream: {str(e)}"
-            logger.exception(e)
-            abort(500, message=response_msg)
+class SinkIn(BaseModel):
+    type: str
 
-    @auth.accepts_token
-    @auth.requires_dataset_ownership
-    @auth.requires_dataset_version_exists
-    def get(self, dataset_id, version):
-        try:
-            sinks = self.sink_service.get_sinks(dataset_id, version)
-            return [
-                sink.dict(
-                    include={"type", "cf_status", "updated_by", "updated_at"},
-                    by_alias=True,
-                )
-                for sink in sinks
-                if not sink.deleted
-            ]
-        except Exception as e:
-            response_msg = f"Could not get sink list: {str(e)}"
-            logger.exception(e)
-            abort(500, message=response_msg)
+
+class SinkOut(SinkIn):
+    cf_status: str = Field("INACTIVE", max_length=20, alias="status")
+    updated_by: Optional[str]
+    updated_at: datetime
+
+
+@router.get(
+    "/{sink_type}",
+    dependencies=[
+        Depends(dataset_owner),
+        Depends(version_exists),
+    ],
+    response_model=SinkOut,
+    response_model_by_alias=True,
+    responses=error_message_models(400, 404, 500),
+)
+def get(
+    dataset_id: str,
+    version: str,
+    sink_type: str,
+    sink_service=Depends(sink_service),
+):
+    try:
+        return sink_service.get_sink(dataset_id, version, sink_type)
+    except KeyError as e:
+        response_msg = f"Invalid sink type: {sink_type}"
+        logger.exception(e)
+        raise ErrorResponse(400, message=response_msg)
+    except SubResourceNotFound:
+        response_msg = (
+            f"Sink of type {sink_type} does not exist on {dataset_id}/{version}"
+        )
+        raise ErrorResponse(404, message=response_msg)
+    except Exception as e:
+        response_msg = f"Could not get sink of type {sink_type} from event stream {dataset_id}/{version}"
+        logger.exception(e)
+        raise ErrorResponse(500, message=response_msg)
+
+
+@router.delete(
+    "/{sink_type}",
+    dependencies=[
+        Depends(dataset_owner),
+        Depends(version_exists),
+    ],
+    responses=error_message_models(400, 404, 409, 500),
+)
+def delete(
+    dataset_id: str,
+    version: str,
+    sink_type: str,
+    auth_info: AuthInfo = Depends(),
+    sink_service=Depends(sink_service),
+):
+    updated_by = auth_info.principal_id
+    try:
+        sink_service.disable_sink(dataset_id, version, sink_type, updated_by)
+    except KeyError as e:
+        response_msg = f"Invalid sink type: {sink_type}"
+        logger.exception(e)
+        raise ErrorResponse(400, response_msg)
+    except ResourceNotFound:
+        response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
+        raise ErrorResponse(404, response_msg)
+    except SubResourceNotFound:
+        response_msg = (
+            f"Sink of type {sink_type} does not exist on {dataset_id}/{version}"
+        )
+        raise ErrorResponse(404, response_msg)
+    except ResourceUnderConstruction:
+        response_msg = (
+            f"Sink of type {sink_type} cannot be disabled since it is being constructed"
+        )
+        raise ErrorResponse(409, response_msg)
+    except Exception as e:
+        logger.exception(e)
+        raise ErrorResponse(500, message="Server error")
+
+    return {
+        "message": f"Disabled sink of type {sink_type} for stream {dataset_id}/{version}"
+    }
+
+
+@router.post(
+    "",
+    dependencies=[
+        Depends(dataset_owner),
+        Depends(version_exists),
+    ],
+    response_model=SinkOut,
+    response_model_by_alias=True,
+    status_code=status.HTTP_201_CREATED,
+    responses=error_message_models(400, 409, 404, 500),
+)
+def post(
+    body: SinkIn,
+    dataset_id: str,
+    version: str,
+    auth_info: AuthInfo = Depends(),
+    sink_service=Depends(sink_service),
+):
+    try:
+        return sink_service.enable_sink(
+            dataset_id, version, body.type, auth_info.principal_id
+        )
+    except KeyError as e:
+        response_msg = f"Invalid sink type: {body.type}"
+        logger.exception(e)
+        raise ErrorResponse(400, response_msg)
+    except ResourceConflict as rc:
+        response_msg = str(rc)
+        logger.exception(rc)
+        raise ErrorResponse(409, response_msg)
+    except ResourceUnderDeletion:
+        response_msg = f"Cannot create sink since a sink of type {body.type} currently is being deleted"
+        raise ErrorResponse(409, response_msg)
+    except ResourceNotFound as e:
+        response_msg = f"Event stream {dataset_id}/{version} does not exist"
+        logger.exception(e)
+        raise ErrorResponse(404, response_msg)
+    except Exception as e:
+        response_msg = f"Could not update event stream: {str(e)}"
+        logger.exception(e)
+        raise ErrorResponse(500, response_msg)
+
+
+@router.get(
+    "",
+    dependencies=[
+        Depends(dataset_owner),
+        Depends(version_exists),
+    ],
+    response_model=List[SinkOut],
+    response_model_by_alias=True,
+    responses=error_message_models(500),
+)
+def list_sinks(dataset_id: str, version: str, sink_service=Depends(sink_service)):
+    try:
+        sinks = sink_service.get_sinks(dataset_id, version)
+        return list(filter(lambda sink: not sink.deleted, sinks))
+    except Exception as e:
+        response_msg = f"Could not get sink list: {str(e)}"
+        logger.exception(e)
+        raise ErrorResponse(500, response_msg)

@@ -11,7 +11,7 @@ class KeycloakConfig:
     realm_name: str
 
 
-def get_keycloak_config():
+def get_keycloak_config() -> KeycloakConfig:
     ssm_client = SSMClient()
 
     client_id = "event-stream-api"

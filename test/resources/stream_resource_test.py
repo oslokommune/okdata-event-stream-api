@@ -1,4 +1,3 @@
-import json
 from origo.data.dataset import Dataset
 
 from services import ResourceConflict, EventStreamService, ResourceNotFound
@@ -29,11 +28,11 @@ class TestPostStreamResource:
         )
 
         assert response.status_code == 201
-        assert json.loads(response.data) == {
+        assert response.json() == {
             "id": test_data.event_stream.id,
             "create_raw": test_data.event_stream.create_raw,
             "updated_by": test_data.event_stream.updated_by,
-            "updated_at": str(test_data.event_stream.updated_at),
+            "updated_at": test_data.event_stream.updated_at.isoformat(),
             "deleted": test_data.event_stream.deleted,
             "status": test_data.event_stream.cf_status,
         }
@@ -58,25 +57,23 @@ class TestPostStreamResource:
             headers={"Authorization": "bearer blablabla"},
         )
         assert response.status_code == 401
-        assert json.loads(response.data) == {"message": "Invalid access token"}
+        assert response.json() == {"message": "Invalid access token"}
 
-    def test_post_400_invalid_header_value(
+    def test_post_invalid_header_value(
         self, mock_client, mock_keycloak, mock_authorizer
     ):
         response = mock_client.post(
             f"/{dataset_id}/{version}", headers={"Authorization": "blablabla"}
         )
-        assert response.status_code == 400
-        assert json.loads(response.data) == {
-            "message": "Authorization header must match pattern: '^(b|B)earer [-0-9a-zA-Z\\._]*$'"
-        }
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Not authenticated"}
 
     def test_post_400_no_authorization_header(
         self, mock_client, mock_keycloak, mock_authorizer
     ):
         response = mock_client.post(f"/{dataset_id}/{version}")
-        assert response.status_code == 400
-        assert json.loads(response.data) == {"message": "Missing authorization header"}
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Not authenticated"}
 
     def test_post_403(self, mock_client, mock_keycloak, mock_authorizer):
         response = mock_client.post(
@@ -84,7 +81,7 @@ class TestPostStreamResource:
             headers={"Authorization": f"bearer {valid_token_no_access}"},
         )
         assert response.status_code == 403
-        assert json.loads(response.data) == {"message": "Forbidden"}
+        assert response.json() == {"message": "Forbidden"}
 
     def test_post_409(
         self,
@@ -97,7 +94,7 @@ class TestPostStreamResource:
             f"/{dataset_id}/{version}", json={"create_raw": False}, headers=auth_header
         )
         assert response.status_code == 409
-        assert json.loads(response.data) == {
+        assert response.json() == {
             "message": f"Event stream with id {dataset_id}/{version} already exist"
         }
 
@@ -110,19 +107,24 @@ class TestPostStreamResource:
     ):
         response = mock_client.post(f"/{dataset_id}/{version}", headers=auth_header)
         assert response.status_code == 500
-        assert json.loads(response.data) == {"message": "Server error"}
+        assert response.json() == {"message": "Server error"}
 
 
 class TestDeleteStreamResource:
     def test_delete_200(
-        self, mock_client, mock_keycloak, mock_authorizer, mock_event_stream_service
+        self,
+        mock_client,
+        mock_keycloak,
+        mock_authorizer,
+        mock_event_stream_service,
+        mock_dataset_versions,
     ):
         response = mock_client.delete(
             f"/{dataset_id}/{version}",
             headers={"Authorization": f"bearer {valid_token}"},
         )
         assert response.status_code == 200
-        assert json.loads(response.data) == {
+        assert response.json() == {
             "message": f"Deleted event stream with id {dataset_id}/{version}"
         }
 
@@ -136,7 +138,7 @@ class TestDeleteStreamResource:
             headers={"Authorization": "bearer blablabla"},
         )
         assert response.status_code == 401
-        assert json.loads(response.data) == {"message": "Invalid access token"}
+        assert response.json() == {"message": "Invalid access token"}
 
     def test_delete_403(self, mock_client, mock_keycloak, mock_authorizer):
         response = mock_client.delete(
@@ -144,13 +146,14 @@ class TestDeleteStreamResource:
             headers={"Authorization": f"bearer {valid_token_no_access}"},
         )
         assert response.status_code == 403
-        assert json.loads(response.data) == {"message": "Forbidden"}
+        assert response.json() == {"message": "Forbidden"}
 
     def test_delete_404_resource_not_found(
         self,
         mock_client,
         mock_keycloak,
         mock_authorizer,
+        mock_dataset_versions,
         mock_event_stream_service_resource_not_found,
     ):
         response = mock_client.delete(
@@ -158,7 +161,7 @@ class TestDeleteStreamResource:
             headers={"Authorization": f"bearer {valid_token}"},
         )
         assert response.status_code == 404
-        assert json.loads(response.data) == {
+        assert response.json() == {
             "message": f"Event stream with id {dataset_id}/{version} does not exist"
         }
 
@@ -167,6 +170,7 @@ class TestDeleteStreamResource:
         mock_client,
         mock_keycloak,
         mock_authorizer,
+        mock_dataset_versions,
         mock_event_stream_service_resource_conflict,
     ):
         response = mock_client.delete(
@@ -174,7 +178,7 @@ class TestDeleteStreamResource:
             headers={"Authorization": f"bearer {valid_token}"},
         )
         assert response.status_code == 409
-        assert json.loads(response.data) == {
+        assert response.json() == {
             "message": f"Event stream with id {dataset_id}/{version} contains sub-resources. Delete all related event-sinks and disable event subscription"
         }
 
@@ -183,6 +187,7 @@ class TestDeleteStreamResource:
         mock_client,
         mock_keycloak,
         mock_authorizer,
+        mock_dataset_versions,
         mock_event_stream_service_server_error,
     ):
         response = mock_client.delete(
@@ -190,7 +195,7 @@ class TestDeleteStreamResource:
             headers={"Authorization": f"bearer {valid_token}"},
         )
         assert response.status_code == 500
-        assert json.loads(response.data) == {"message": "Server error"}
+        assert response.json() == {"message": "Server error"}
 
 
 class TestGetStreamResource:
@@ -203,7 +208,7 @@ class TestGetStreamResource:
         mock_authorizer,
     ):
         response = mock_client.get(f"/{dataset_id}/{version}", headers=auth_header)
-        data = json.loads(response.data)
+        data = response.json()
         assert response.status_code == 200
         assert data["id"] == "my-test-dataset"
         assert data["confidentiality"] == "green"
@@ -214,7 +219,7 @@ class TestGetStreamResource:
             headers={"Authorization": f"bearer {valid_token_no_access}"},
         )
         assert response.status_code == 403
-        assert json.loads(response.data) == {"message": "Forbidden"}
+        assert response.json() == {"message": "Forbidden"}
 
     def test_get_404_version_missing(
         self, mock_client, mock_dataset_versions, mock_keycloak, mock_authorizer

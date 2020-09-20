@@ -34,8 +34,8 @@ test: $(BUILD_VENV)/bin/tox
 	$(BUILD_PY) -m tox -p auto -o
 
 .PHONY: run
-run: $(BUILD_VENV)/bin/flask $(BUILD_VENV)/lib/python$(PY_VERSION)/site-packages/flask_restful
-	FLASK_APP=app.py $(BUILD_PY) -m flask run
+run: $(BUILD_VENV)/bin/uvicorn
+	$(BUILD_VENV)/bin/uvicorn app:app --reload
 
 .PHONY: upgrade-deps
 upgrade-deps: $(BUILD_VENV)/bin/pip-compile

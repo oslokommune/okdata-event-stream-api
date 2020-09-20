@@ -1,90 +1,69 @@
-import re
-from flask import g, request, make_response, current_app
-from functools import wraps
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from clients import setup_keycloak_client, get_keycloak_config
 
-from origo.dataset_authorizer.simple_dataset_authorizer_client import (
-    SimpleDatasetAuthorizerClient,
-)
-
-from clients import setup_keycloak_client, setup_origo_sdk, get_keycloak_config
+from .errors import ErrorResponse
+from .origo_clients import simple_dataset_authorizer_client, dataset_client
 
 
-class Authorizer(object):
-    def __init__(self, app=None):
-        self.config = get_keycloak_config()
+def keycloak_client(keycloak_config=Depends(get_keycloak_config)):
+    return setup_keycloak_client(keycloak_config)
 
-        self.keycloak_client = setup_keycloak_client(self.config)
 
-        self.simple_dataset_authorizer_client = setup_origo_sdk(
-            self.config, SimpleDatasetAuthorizerClient
-        )
+bearer_token = HTTPBearer(scheme_name="Keycloak token")
 
-        if app is not None:
-            self.init_app(app)
 
-    def init_app(self, app):
-        """ Any setup that requires a Flask app, e.g. using app factories """
+class AuthInfo:
+    principal_id: str
+    bearer_token: str
+
+    def __init__(
+        self,
+        authorization: HTTPAuthorizationCredentials = Depends(bearer_token),
+        keycloak_client=Depends(keycloak_client),
+    ):
+        introspected = keycloak_client.introspect(authorization.credentials)
+
+        if not introspected["active"]:
+            raise ErrorResponse(401, "Invalid access token")
+
+        self.principal_id = introspected["username"]
+        self.bearer_token = authorization.credentials
+
+
+def dataset_owner(
+    dataset_id: str,
+    auth_info: AuthInfo = Depends(),
+    simple_dataset_authorizer_client=Depends(simple_dataset_authorizer_client),
+):
+    dataset_access = simple_dataset_authorizer_client.check_dataset_access(
+        dataset_id, bearer_token=auth_info.bearer_token
+    )
+    if not dataset_access["access"]:
+        raise ErrorResponse(403, "Forbidden")
+
+
+def dataset_exists(dataset_id: str, dataset_client=Depends(dataset_client)) -> dict:
+    try:
+        dataset = dataset_client.get_dataset(dataset_id)
+        return dataset
+    except Exception:
+        message = f"Could not find dataset: {dataset_id}"
+        raise ErrorResponse(404, message)
+
+
+def version_exists(
+    dataset_id: str, version: str, dataset_client=Depends(dataset_client)
+) -> dict:
+    try:
+        versions = dataset_client.get_versions(dataset_id)
+        for v in versions:
+            if v["version"] == version:
+                return v
+    except Exception:
         pass
 
-    def accepts_token(self, view_func):
-        @wraps(view_func)
-        def decorated(resource, **kwargs):
-            auth_header = request.headers.get("Authorization")
-
-            if auth_header:
-                pattern = re.compile("^(b|B)earer [-0-9a-zA-Z\\._]*$")
-                if pattern.match(auth_header):
-                    _, bearer_token = auth_header.split()
-                else:
-                    return make_response(
-                        {
-                            "message": f"Authorization header must match pattern: '{pattern.pattern}'"
-                        },
-                        400,
-                    )
-            else:
-                return make_response({"message": "Missing authorization header"}, 400)
-
-            introspected = self.keycloak_client.introspect(bearer_token)
-
-            if introspected["active"]:
-                g.principal_id = introspected["username"]
-                g.bearer_token = bearer_token
-                return view_func(resource, **kwargs)
-            else:
-                return make_response({"message": "Invalid access token"}, 401)
-
-        return decorated
-
-    def requires_dataset_ownership(self, view_func):
-        @wraps(view_func)
-        def decorated(resource, **kwargs):
-            dataset_access = self.simple_dataset_authorizer_client.check_dataset_access(
-                kwargs["dataset_id"], bearer_token=g.bearer_token
-            )
-
-            if dataset_access["access"]:
-                return view_func(resource, **kwargs)
-            else:
-                return make_response({"message": "Forbidden"}, 403)
-
-        return decorated
-
-    def requires_dataset_version_exists(self, view_func):
-        @wraps(view_func)
-        def decorated(resource, **kwargs):
-            versions = current_app.dataset_client.get_versions(kwargs["dataset_id"])
-            for version in versions:
-                if version["version"] == kwargs["version"]:
-                    return view_func(resource, **kwargs)
-            return make_response(
-                {
-                    "message": f"Version: {kwargs['version']} for dataset '{kwargs['dataset_id']}' not found"
-                },
-                404,
-            )
-
-        return decorated
-
-
-auth = Authorizer()
+    raise ErrorResponse(
+        404,
+        f"Version: {version} for dataset '{dataset_id}' not found",
+    )
