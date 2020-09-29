@@ -19,7 +19,7 @@ setup(
     py_modules=["app"],
     install_requires=[
         "fastapi==0.61.1",
-        "mangum==0.9.2",
+        "mangum==0.10.0",
         "origo-sdk-python==0.2.3",
         "shortuuid",
         "elasticsearch-dsl==7.2.1",
