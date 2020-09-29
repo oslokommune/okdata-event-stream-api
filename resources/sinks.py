@@ -32,48 +32,56 @@ class SinkResource(Resource):
     @auth.accepts_token
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
-    def get(self, dataset_id, version, sink_id):
+    def get(self, dataset_id, version, sink_type):
         try:
-            sink = self.sink_service.get_sink(dataset_id, version, sink_id)
+            sink = self.sink_service.get_sink(dataset_id, version, sink_type)
             return sink.dict(
-                include={"id", "type", "cf_status", "updated_by", "updated_at"},
+                include={"type", "cf_status", "updated_by", "updated_at"},
                 by_alias=True,
             )
+        except KeyError as e:
+            response_msg = f"Invalid sink type: {sink_type}"
+            logger.exception(e)
+            abort(400, message=response_msg)
         except SubResourceNotFound:
-            response_msg = f"sink {sink_id} does not exist on {dataset_id}/{version}"
+            response_msg = (
+                f"Sink of type {sink_type} does not exist on {dataset_id}/{version}"
+            )
             abort(404, message=response_msg)
         except Exception as e:
-            response_msg = (
-                f"Could not get sink {sink_id} from event stream {dataset_id}/{version}"
-            )
+            response_msg = f"Could not get sink of type {sink_type} from event stream {dataset_id}/{version}"
             logger.exception(e)
             abort(500, message=response_msg)
 
     @auth.accepts_token
     @auth.requires_dataset_ownership
     @auth.requires_dataset_version_exists
-    def delete(self, dataset_id, version, sink_id):
+    def delete(self, dataset_id, version, sink_type):
         updated_by = g.principal_id
         try:
-            self.sink_service.disable_sink(dataset_id, version, sink_id, updated_by)
+            self.sink_service.disable_sink(dataset_id, version, sink_type, updated_by)
+        except KeyError as e:
+            response_msg = f"Invalid sink type: {sink_type}"
+            logger.exception(e)
+            abort(400, message=response_msg)
         except ResourceNotFound:
             response_msg = f"Event stream with id {dataset_id}/{version} does not exist"
             abort(404, message=response_msg)
         except SubResourceNotFound:
             response_msg = (
-                f"Sink with id {sink_id} does not exist on {dataset_id}/{version}"
+                f"Sink of type {sink_type} does not exist on {dataset_id}/{version}"
             )
             abort(404, message=response_msg)
         except ResourceUnderConstruction:
-            response_msg = (
-                f"Sink with {sink_id} cannot be disabled since it is being constructed"
-            )
+            response_msg = f"Sink of type {sink_type} cannot be disabled since it is being constructed"
             abort(409, response_msg)
         except Exception as e:
             logger.exception(e)
             abort(500, message="Server error")
 
-        return {"message": f"Disabled sink {sink_id} for stream {dataset_id}/{version}"}
+        return {
+            "message": f"Disabled sink of type {sink_type} for stream {dataset_id}/{version}"
+        }
 
 
 class SinksResource(Resource):
@@ -86,18 +94,25 @@ class SinksResource(Resource):
     def post(self, dataset_id, version):
         try:
             data = request.get_json()
+            sink_type = data["type"]
+            assert sink_type is not None
+        except Exception as e:
+            logger.exception(e)
+            abort(400, message="No sink type specified in request body")
+
+        try:
             sink = self.sink_service.enable_sink(
-                dataset_id, version, data, g.principal_id
+                dataset_id, version, sink_type, g.principal_id
             )
             return (
                 sink.dict(
-                    include={"id", "type", "cf_status", "updated_by", "updated_at"},
+                    include={"type", "cf_status", "updated_by", "updated_at"},
                     by_alias=True,
                 ),
                 201,
             )
         except KeyError as e:
-            response_msg = f"Invalid sink type: {data['type']}"
+            response_msg = f"Invalid sink type: {sink_type}"
             logger.exception(e)
             abort(400, message=response_msg)
         except ResourceConflict as rc:
@@ -124,7 +139,7 @@ class SinksResource(Resource):
             sinks = self.sink_service.get_sinks(dataset_id, version)
             return [
                 sink.dict(
-                    include={"id", "type", "cf_status", "updated_by", "updated_at"},
+                    include={"type", "cf_status", "updated_by", "updated_at"},
                     by_alias=True,
                 )
                 for sink in sinks

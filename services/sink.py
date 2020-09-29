@@ -18,23 +18,23 @@ class SinkService(EventService):
             return []
         return event_stream.sinks
 
-    def get_sink_from_sink_list(self, sinks: list, sink_id) -> dict:
+    def get_sink_from_sink_list(self, sinks: list, sink_type: SinkType) -> dict:
         for sink in sinks:
-            if sink.id == sink_id and sink.deleted:
-                raise SubResourceNotFound
-            elif sink.id == sink_id:
+            if sink.type == sink_type.value and not sink.deleted:
                 return sink
         raise SubResourceNotFound
 
-    def get_sink(self, dataset_id: str, version: str, sink_id: str) -> dict:
+    def get_sink(self, dataset_id: str, version: str, sink_type: str) -> dict:
+        sink_type = SinkType[sink_type.upper()]
         sinks = self.get_sinks(dataset_id, version)
-        return self.get_sink_from_sink_list(sinks, sink_id)
+        return self.get_sink_from_sink_list(sinks, sink_type)
 
     def get_sink_from_event_stream(
-        self, event_stream: EventStream, sink_id: str
+        self, event_stream: EventStream, sink_type: str
     ) -> dict:
+        sink_type = SinkType[sink_type.upper()]
         sinks = event_stream.sinks
-        return self.get_sink_from_sink_list(sinks, sink_id)
+        return self.get_sink_from_sink_list(sinks, sink_type)
 
     def check_for_existing_sink_type(
         self, event_stream: EventStream, sink_type: SinkType
@@ -48,7 +48,7 @@ class SinkService(EventService):
                 )
 
     def enable_sink(
-        self, dataset_id: str, version: str, sink_data: dict, updated_by: str
+        self, dataset_id: str, version: str, sink_type: str, updated_by: str
     ) -> Sink:
         event_stream = self.get_event_stream(dataset_id, version)
         if event_stream is None:
@@ -56,7 +56,7 @@ class SinkService(EventService):
         if event_stream.deleted:
             raise ResourceNotFound
 
-        sink_type = SinkType[sink_data["type"].upper()]
+        sink_type = SinkType[sink_type.upper()]
         self.check_for_existing_sink_type(event_stream, sink_type)
 
         dataset = self.dataset_client.get_dataset(dataset_id)
@@ -81,7 +81,7 @@ class SinkService(EventService):
         return sink
 
     def disable_sink(
-        self, dataset_id: str, version: str, sink_id: str, updated_by: str
+        self, dataset_id: str, version: str, sink_type: str, updated_by: str
     ):
         event_stream = self.get_event_stream(dataset_id, version)
         if event_stream is None:
@@ -89,7 +89,7 @@ class SinkService(EventService):
         if event_stream.deleted:
             raise ResourceNotFound
 
-        sink = self.get_sink_from_event_stream(event_stream, sink_id)
+        sink = self.get_sink_from_event_stream(event_stream, sink_type)
         if sink.cf_status == "CREATE_IN_PROGRESS":
             raise ResourceUnderConstruction
         sink.cf_status = "DELETE_IN_PROGRESS"

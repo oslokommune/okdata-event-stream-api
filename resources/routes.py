@@ -19,7 +19,7 @@ def initialize_routes(api):
     )
     api.add_resource(
         SinkResource,
-        "/<string:dataset_id>/<string:version>/sinks/<string:sink_id>",
+        "/<string:dataset_id>/<string:version>/sinks/<string:sink_type>",
     )
     api.add_resource(
         SubscribableResource, "/<string:dataset_id>/<string:version>/subscribable"

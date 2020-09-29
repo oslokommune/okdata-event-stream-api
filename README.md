@@ -57,6 +57,6 @@ Enable an event sink: `curl -H "Authorization: bearer $TOKEN" -H "Content-Type: 
 
 Get all sinks: `curl -H "Authorization: bearer $TOKEN" -XGET http://127.0.0.1:8080/{dataset-id}/{version}/sinks`
 
-Get a single sink: `curl -H "Authorization: bearer $TOKEN" -XGET http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_id}`
+Get a single sink: `curl -H "Authorization: bearer $TOKEN" -XGET http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_type}`
 
-Disable an event sink: `curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" -XDELETE http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_id}`
+Disable an event sink: `curl -H "Authorization: bearer $TOKEN" -H "Content-Type: application/json" -XDELETE http://127.0.0.1:8080/{dataset-id}/{version}/sinks/{sink_type}`
