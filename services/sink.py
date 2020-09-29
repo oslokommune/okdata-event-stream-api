@@ -1,3 +1,4 @@
+from typing import List
 from database import EventStream, Sink, SinkType
 from services import (
     EventService,
@@ -12,33 +13,33 @@ from services.template import SinkTemplate
 
 
 class SinkService(EventService):
-    def get_sinks(self, dataset_id: str, version: str) -> list:
+    def get_sinks(self, dataset_id: str, version: str) -> List[Sink]:
         event_stream = self.get_event_stream(dataset_id, version)
         if not event_stream.sinks:
             return []
         return event_stream.sinks
 
-    def get_sink_from_sink_list(self, sinks: list, sink_type: SinkType) -> dict:
+    def get_sink_from_sink_list(self, sinks: list, sink_type: SinkType) -> Sink:
         for sink in sinks:
             if sink.type == sink_type.value and not sink.deleted:
                 return sink
         raise SubResourceNotFound
 
-    def get_sink(self, dataset_id: str, version: str, sink_type: str) -> dict:
-        sink_type = SinkType[sink_type.upper()]
+    def get_sink(self, dataset_id: str, version: str, sink_type: str) -> Sink:
+        st = SinkType[sink_type.upper()]
         sinks = self.get_sinks(dataset_id, version)
-        return self.get_sink_from_sink_list(sinks, sink_type)
+        return self.get_sink_from_sink_list(sinks, st)
 
     def get_sink_from_event_stream(
         self, event_stream: EventStream, sink_type: str
-    ) -> dict:
-        sink_type = SinkType[sink_type.upper()]
+    ) -> Sink:
+        st = SinkType[sink_type.upper()]
         sinks = event_stream.sinks
-        return self.get_sink_from_sink_list(sinks, sink_type)
+        return self.get_sink_from_sink_list(sinks, st)
 
     def check_for_existing_sink_type(
         self, event_stream: EventStream, sink_type: SinkType
-    ) -> bool:
+    ) -> None:
         for sink in event_stream.sinks:
             if sink.type == sink_type and sink.cf_status == "DELETE_IN_PROGRESS":
                 raise ResourceUnderDeletion
@@ -56,13 +57,13 @@ class SinkService(EventService):
         if event_stream.deleted:
             raise ResourceNotFound
 
-        sink_type = SinkType[sink_type.upper()]
-        self.check_for_existing_sink_type(event_stream, sink_type)
+        st = SinkType[sink_type.upper()]
+        self.check_for_existing_sink_type(event_stream, st)
 
         dataset = self.dataset_client.get_dataset(dataset_id)
 
         sink = Sink(
-            type=sink_type.value,
+            type=st.value,
             cf_status="CREATE_IN_PROGRESS",
             updated_by=updated_by,
             updated_at=datetime_utils.utc_now_with_timezone(),
@@ -82,7 +83,7 @@ class SinkService(EventService):
 
     def disable_sink(
         self, dataset_id: str, version: str, sink_type: str, updated_by: str
-    ):
+    ) -> None:
         event_stream = self.get_event_stream(dataset_id, version)
         if event_stream is None:
             raise ResourceNotFound

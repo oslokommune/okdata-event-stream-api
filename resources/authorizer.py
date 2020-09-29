@@ -10,7 +10,7 @@ def keycloak_client(keycloak_config=Depends(get_keycloak_config)):
     return setup_keycloak_client(keycloak_config)
 
 
-bearer_token = HTTPBearer(scheme_name="Keycloak token")
+http_bearer = HTTPBearer(scheme_name="Keycloak token")
 
 
 class AuthInfo:
@@ -19,7 +19,7 @@ class AuthInfo:
 
     def __init__(
         self,
-        authorization: HTTPAuthorizationCredentials = Depends(bearer_token),
+        authorization: HTTPAuthorizationCredentials = Depends(http_bearer),
         keycloak_client=Depends(keycloak_client),
     ):
         introspected = keycloak_client.introspect(authorization.credentials)
