@@ -1,10 +1,12 @@
 import logging
-from flask import request, g, current_app
-from flask_restful import abort
+from typing import Optional
+from datetime import datetime
+from fastapi import Depends, APIRouter
+from pydantic import BaseModel, Field
 
-
-from resources import Resource
-from resources.authorizer import auth
+from resources.authorizer import AuthInfo, dataset_owner
+from resources.origo_clients import dataset_client
+from resources.errors import ErrorResponse, error_message_models
 from services import SubscribableService
 from services.exceptions import (
     ResourceNotFound,
@@ -16,71 +18,85 @@ from services.exceptions import (
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+router = APIRouter()
 
-class SubscribableResource(Resource):
-    def __init__(self):
-        self.subscribable_service = SubscribableService(current_app.dataset_client)
 
-    @auth.accepts_token
-    def get(self, dataset_id, version):
-        try:
-            subscribable = self.subscribable_service.get_subscribable(
-                dataset_id, version
-            )
-        except ResourceNotFound:
-            abort(
-                404,
-                message=f"Event stream with id {dataset_id}/{version} does not exist",
-            )
-        except Exception as e:
-            logger.exception(e)
-            abort(500, message="Server error")
+def subscribable_service(dataset_client=Depends(dataset_client)) -> SubscribableService:
+    return SubscribableService(dataset_client)
 
-        return subscribable.dict(
-            include={"cf_status", "updated_by", "updated_at", "enabled"}, by_alias=True
+
+class SubscribableIn(BaseModel):
+    enabled: bool
+
+
+class SubscribableOut(SubscribableIn):
+    cf_status: str = Field("INACTIVE", max_length=20, alias="status")
+    updated_by: Optional[str]
+    updated_at: datetime
+
+
+@router.get(
+    "",
+    dependencies=[Depends(AuthInfo)],
+    response_model=SubscribableOut,
+    response_model_by_alias=True,
+    responses=error_message_models(404, 500),
+)
+def get(
+    dataset_id: str, version: str, subscribable_service=Depends(subscribable_service)
+):
+    try:
+        return subscribable_service.get_subscribable(dataset_id, version)
+    except ResourceNotFound:
+        raise ErrorResponse(
+            404,
+            f"Event stream with id {dataset_id}/{version} does not exist",
         )
+    except Exception as e:
+        logger.exception(e)
+        raise ErrorResponse(500, "Server error")
 
-    @auth.accepts_token
-    @auth.requires_dataset_ownership
-    def put(self, dataset_id, version):
-        try:
-            request_body = request.get_json()
-            enabled = request_body["enabled"]
-            assert isinstance(enabled, bool)
-            updated_by = g.principal_id
-        except Exception as e:
-            logger.exception(e)
-            abort(400, message="Bad request")
 
-        service_call = (
-            self.subscribable_service.enable_subscription
-            if enabled
-            else self.subscribable_service.disable_subscription
+@router.put(
+    "",
+    dependencies=[Depends(dataset_owner)],
+    response_model=SubscribableOut,
+    response_model_by_alias=True,
+    responses=error_message_models(404, 409, 500),
+)
+def put(
+    body: SubscribableIn,
+    dataset_id: str,
+    version: str,
+    auth_info: AuthInfo = Depends(),
+    subscribable_service=Depends(subscribable_service),
+):
+    service_call = (
+        subscribable_service.enable_subscription
+        if body.enabled
+        else subscribable_service.disable_subscription
+    )
+
+    try:
+        return service_call(dataset_id, version, auth_info.principal_id)
+    except ResourceNotFound:
+        raise ErrorResponse(
+            404,
+            f"Event stream with id {dataset_id}/{version} does not exist",
         )
-
-        try:
-            subscribable = service_call(dataset_id, version, updated_by)
-        except ResourceNotFound:
-            abort(
-                404,
-                message=f"Event stream with id {dataset_id}/{version} does not exist",
-            )
-        except ParentResourceNotReady:
-            abort(
-                409, message=f"Event stream with id {dataset_id}/{version} is not ready"
-            )
-        except ResourceConflict:
-            subscribable_state = (
-                "already subscribable" if enabled else "not currently subscribable"
-            )
-            abort(
-                409,
-                message=f"Event stream with id {dataset_id}/{version} is {subscribable_state}",
-            )
-        except Exception as e:
-            logger.exception(e)
-            abort(500, message="Server error")
-
-        return subscribable.dict(
-            include={"cf_status", "updated_by", "updated_at", "enabled"}, by_alias=True
+    except ParentResourceNotReady:
+        raise ErrorResponse(
+            409,
+            f"Event stream with id {dataset_id}/{version} is not ready",
         )
+    except ResourceConflict:
+        subscribable_state = (
+            "already subscribable" if body.enabled else "not currently subscribable"
+        )
+        raise ErrorResponse(
+            409,
+            f"Event stream with id {dataset_id}/{version} is {subscribable_state}",
+        )
+    except Exception as e:
+        logger.exception(e)
+        raise ErrorResponse(500, "Server error")

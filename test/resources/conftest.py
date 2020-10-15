@@ -1,24 +1,17 @@
 import pytest
+from fastapi.testclient import TestClient
 from keycloak import KeycloakOpenID
 from origo.data.dataset import Dataset
 from origo.dataset_authorizer.simple_dataset_authorizer_client import (
     SimpleDatasetAuthorizerClient,
 )
 
+from app import app
+
 
 @pytest.fixture
 def mock_client(mock_boto):
-    from app import app as flask_app
-
-    # Configure the application for testing and disable error catching during
-    # request handling for better reports. Required in order for exceptions
-    # to propagate to the test client.
-    # https://flask.palletsprojects.com/en/1.1.x/testing/
-    # https://flask.palletsprojects.com/en/1.1.x/api/#flask.Flask.test_client
-    flask_app.config["TESTING"] = True
-
-    with flask_app.test_client() as client:
-        yield client
+    return TestClient(app)
 
 
 valid_token = "valid-token"

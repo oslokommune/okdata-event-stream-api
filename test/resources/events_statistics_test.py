@@ -32,7 +32,7 @@ class TestStatistics:
             f"/{dataset_id}/{version}/events/statistics?from_date={from_date}&to_date={to_date}",
             headers=auth_header,
         )
-        response_data = response.get_json()
+        response_data = response.json()
         assert response.status_code == 200
         assert response_data == 10899
 
@@ -47,9 +47,20 @@ class TestStatistics:
         response = mock_client.get(
             f"/{dataset_id}/{version}/events/statistics", headers=auth_header
         )
-        response_data = response.get_json()
-        assert response.status_code == 400
-        assert response_data["message"] == "No date provided"
+        response_data = response.json()
+        assert response.status_code == 422
+        assert response_data["detail"] == [
+            {
+                "loc": ["query", "from_date"],
+                "msg": "field required",
+                "type": "value_error.missing",
+            },
+            {
+                "loc": ["query", "to_date"],
+                "msg": "field required",
+                "type": "value_error.missing",
+            },
+        ]
 
 
 ### Fixtures for TestStatistics ###

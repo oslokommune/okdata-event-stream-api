@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 from datetime import datetime
-from shortuuid import ShortUUID
+from shortuuid import ShortUUID  # type: ignore
 from pydantic import BaseModel, Field, validator
 from typing import Dict
 from enum import Enum
@@ -29,10 +29,12 @@ class StackTemplate(BaseModel):
 
 
 class Stack(BaseModel):
-    cf_stack_template: StackTemplate = None
+    cf_stack_template: Optional[StackTemplate] = None
     cf_status: str = Field("INACTIVE", max_length=20, alias="status")
-    cf_stack_name: str = None
-    updated_by: str = None  # Remove None when all DynamoDB in dev have this field ;)
+    cf_stack_name: Optional[str] = None
+    updated_by: Optional[
+        str
+    ] = None  # TODO Remove None when all DynamoDB in dev have this field ;)
     updated_at: datetime = Field(
         default_factory=datetime_utils.utc_now_with_timezone, str=datetime.isoformat
     )

@@ -18,12 +18,13 @@ setup(
     url="https://github.oslo.kommune.no/origo-dataplatform/event-streams-api",
     py_modules=["app"],
     install_requires=[
-        "flask==1.1.2",
-        "flask-restful==0.3.8",
-        "pydantic==1.5.1",
+        "fastapi==0.61.1",
+        "mangum==0.10.0",
         "origo-sdk-python==0.2.3",
         "shortuuid",
         "elasticsearch-dsl==7.2.1",
         "requests-aws4auth==1.0",
+        "boto3",
+        "pytz",
     ],
 )

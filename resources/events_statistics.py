@@ -1,52 +1,39 @@
 import logging
-from flask import current_app
-from flask_restful import Resource, abort, reqparse
-from datetime import datetime
+from fastapi import Depends, APIRouter
+from datetime import date
 
-from resources.authorizer import auth
+from resources.authorizer import dataset_owner, version_exists
+from resources.origo_clients import dataset_client
+from resources.errors import ErrorResponse, error_message_models
 from services import ElasticsearchDataService
 
 logger = logging.getLogger()
+router = APIRouter()
 
 
-# Returns the countnumber based on provided dates
-class StreamStatisticsResource(Resource):
-    def __init__(self):
-        self.query_service = ElasticsearchDataService(current_app.dataset_client)
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument("from_date", type=str)
-        self.parser.add_argument("to_date", type=str)
-        self.parser.add_argument("type", type=str)
+def query_service(dataset_client=Depends(dataset_client)) -> ElasticsearchDataService:
+    return ElasticsearchDataService(dataset_client)
 
-    @auth.accepts_token
-    @auth.requires_dataset_ownership
-    @auth.requires_dataset_version_exists
-    def get(self, dataset_id, version):
-        args = self.parser.parse_args()
-        type = "count"
-        valid_types = ["count"]
-        if args["type"] and args["type"] in valid_types:
-            type = args["type"]
-        try:
-            from_date = datetime.fromisoformat(args["from_date"])
-            to_date = datetime.fromisoformat(args["to_date"])
-        except ValueError as data_error:
-            logger.error("Error while processing date data. Try isoformat.")
-            logger.exception(data_error)
-            abort(400, message="Error while processing date data. Try isoformat")
-        except TypeError as no_date_error:
-            logger.error("No date provided")
-            logger.exception(no_date_error)
-            abort(400, message="No date provided")
 
-        logger.info(
-            f"Getting count event with id: {dataset_id}-{version} from {from_date} to {to_date}"
-        )
+@router.get(
+    "",
+    dependencies=[Depends(dataset_owner), Depends(version_exists)],
+    responses=error_message_models(400),
+)
+def count(
+    dataset_id: str,
+    version: str,
+    from_date: date,
+    to_date: date,
+    query_service=Depends(query_service),
+):
+    logger.info(
+        f"Getting count event with id: {dataset_id}-{version} from {from_date} to {to_date}"
+    )
 
-        if type == "count":
-            data = self.query_service.get_event_count(
-                dataset_id, version, from_date, to_date
-            )
-        if not data:
-            abort(400, message=f"Could not find event: {dataset_id}/{version}")
-        return data
+    data = query_service.get_event_count(dataset_id, version, from_date, to_date)
+
+    if not data:
+        raise ErrorResponse(400, f"Could not find event: {dataset_id}/{version}")
+
+    return data

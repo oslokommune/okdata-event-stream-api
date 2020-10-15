@@ -31,7 +31,7 @@ class TestGetEvent:
             f"/{dataset_id}/{version}/events?from_date={from_date}&to_date={to_date}",
             headers=auth_header,
         )
-        response_data = response.get_json()
+        response_data = response.json()
         assert response.status_code == 200
         assert response_data["stasjonId"] == 41
 
@@ -47,7 +47,7 @@ class TestGetEvent:
             f"/{dataset_id}/{version}/events?from_date={from_date}&to_date={to_date}",
             headers=auth_header,
         )
-        response_data = response.get_json()
+        response_data = response.json()
         assert response.status_code == 400
         assert (
             response_data["message"] == f"Could not find event: {dataset_id}/{version}"

@@ -22,7 +22,7 @@ provider:
     VERSION: ${self:custom.version}
     ORIGO_ENVIRONMENT: ${self:provider.stage}
     ES_API_ENDPOINT: ${ssm:/dataplatform/shared/eventdata-elasticsearch-endpoint}
-    API_GATEWAY_BASE_PATH: streams
+    ROOT_PATH: "/streams"
 package:
   exclude:
     - "**/*"
@@ -37,7 +37,7 @@ package:
 
 functions:
   app:
-    handler: wsgi_handler.handler
+    handler: handler.handler
     events:
       - http: ANY /
       - http: "ANY {proxy+}"
@@ -48,7 +48,6 @@ functions:
       - sns: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:event-stream-api-cloudformation-events"
 
 plugins:
-  - serverless-wsgi
   - serverless-python-requirements
   - serverless-plugin-git-variables
   - serverless-pseudo-parameters
@@ -61,9 +60,6 @@ resources:
 
 custom:
   version: 0.1.0
-  wsgi:
-    app: app.app
-    packRequirements: false
   pythonRequirements:
     dockerizePip: non-linux
     slim: true

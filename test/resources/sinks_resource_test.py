@@ -1,4 +1,3 @@
-import json
 import pytest
 from origo.data.dataset import Dataset
 
@@ -31,7 +30,7 @@ class TestPostStreamSinkResource:
             json={"type": sink_type},
             headers=auth_header,
         )
-        data = json.loads(response.data)
+        data = response.json()
 
         assert response.status_code == 201
         assert data.keys() == {"type", "status", "updated_by", "updated_at"}
@@ -43,25 +42,23 @@ class TestPostStreamSinkResource:
             headers={"Authorization": "bearer blablabla"},
         )
         assert response.status_code == 401
-        assert json.loads(response.data) == {"message": "Invalid access token"}
+        assert response.json() == {"message": "Invalid access token"}
 
-    def test_post_400_invalid_header_value(
+    def test_post_invalid_header_value(
         self, mock_client, mock_keycloak, mock_authorizer
     ):
         response = mock_client.post(
             f"/{dataset_id}/{version}/sinks", headers={"Authorization": "blablabla"}
         )
-        assert response.status_code == 400
-        assert json.loads(response.data) == {
-            "message": "Authorization header must match pattern: '^(b|B)earer [-0-9a-zA-Z\\._]*$'"
-        }
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Not authenticated"}
 
-    def test_post_400_no_authorization_header(
+    def test_post_no_authorization_header(
         self, mock_client, mock_keycloak, mock_authorizer
     ):
         response = mock_client.post(f"/{dataset_id}/{version}/sinks")
-        assert response.status_code == 400
-        assert json.loads(response.data) == {"message": "Missing authorization header"}
+        assert response.status_code == 403
+        assert response.json() == {"detail": "Not authenticated"}
 
     def test_post_404_no_event_stream(
         self,
@@ -76,7 +73,7 @@ class TestPostStreamSinkResource:
         )
         assert response.status_code == 404
 
-    def test_post_400_no_request_body(
+    def test_post_no_request_body(
         self,
         mock_client,
         mock_event_get_stream,
@@ -88,11 +85,19 @@ class TestPostStreamSinkResource:
             f"/{dataset_id}/{version}/sinks",
             headers=auth_header,
         )
-        data = json.loads(response.data)
-        assert response.status_code == 400
-        assert data["message"] == "No sink type specified in request body"
+        data = response.json()
+        assert response.status_code == 422
+        assert data == {
+            "detail": [
+                {
+                    "loc": ["body"],
+                    "msg": "field required",
+                    "type": "value_error.missing",
+                },
+            ],
+        }
 
-    def test_post_400_invalid_request_body(
+    def test_post_invalid_request_body(
         self,
         mock_client,
         mock_event_get_stream,
@@ -105,9 +110,17 @@ class TestPostStreamSinkResource:
             json={"foo": "bar"},
             headers=auth_header,
         )
-        data = json.loads(response.data)
-        assert response.status_code == 400
-        assert data["message"] == "No sink type specified in request body"
+        data = response.json()
+        assert response.status_code == 422
+        assert data == {
+            "detail": [
+                {
+                    "loc": ["body", "type"],
+                    "msg": "field required",
+                    "type": "value_error.missing",
+                },
+            ],
+        }
 
     def test_post_400_invalid_sink_type(
         self,
@@ -122,7 +135,7 @@ class TestPostStreamSinkResource:
             json={"type": "pompel"},
             headers=auth_header,
         )
-        data = json.loads(response.data)
+        data = response.json()
         assert response.status_code == 400
         assert data["message"] == "Invalid sink type: pompel"
 
@@ -139,7 +152,7 @@ class TestPostStreamSinkResource:
             json={"type": "s3"},
             headers=auth_header,
         )
-        data = json.loads(response.data)
+        data = response.json()
         assert response.status_code == 409
         assert data["message"] == "Sink: s3 already exists on my-test-dataset"
 
@@ -156,7 +169,7 @@ class TestDeleteStreamSinkResource:
         response = mock_client.delete(
             f"/{dataset_id}/{version}/sinks/{sink_type}", headers=auth_header
         )
-        data = json.loads(response.data)
+        data = response.json()
         assert response.status_code == 404
         assert (
             data["message"]
@@ -175,7 +188,7 @@ class TestDeleteStreamSinkResource:
         response = mock_client.delete(
             f"/{dataset_id}/{version}/sinks/{sink_type}", headers=auth_header
         )
-        data = json.loads(response.data)
+        data = response.json()
         assert response.status_code == 404
         assert (
             data["message"]
@@ -195,7 +208,7 @@ class TestGetStreamSinkResource:
         response = mock_client.get(
             f"/{dataset_id}/{version}/sinks", headers=auth_header
         )
-        data = json.loads(response.data)
+        data = response.json()
         assert response.status_code == 200
         assert len(data) == 1
         assert data[0].keys() == {"type", "status", "updated_by", "updated_at"}
@@ -211,7 +224,7 @@ class TestGetStreamSinkResource:
         response = mock_client.get(
             f"/{dataset_id}/{version}/sinks/elasticsearch", headers=auth_header
         )
-        data = json.loads(response.data)
+        data = response.json()
         assert data.keys() == {"type", "status", "updated_by", "updated_at"}
         assert response.status_code == 200
         assert data["type"] == "elasticsearch"

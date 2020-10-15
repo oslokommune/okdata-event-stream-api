@@ -1,4 +1,3 @@
-import json
 import pytest
 from unittest.mock import ANY
 
@@ -24,7 +23,7 @@ def test_get_200(mock_client, mock_subscribable_service, mock_keycloak):
     )
 
     assert response.status_code == 200
-    assert json.loads(response.data).keys() == {
+    assert response.json().keys() == {
         "status",
         "updated_by",
         "updated_at",
@@ -38,7 +37,7 @@ def test_get_401_invalid_token(mock_client, mock_keycloak):
         headers={"Authorization": "bearer blablabla"},
     )
     assert response.status_code == 401
-    assert json.loads(response.data) == {"message": "Invalid access token"}
+    assert response.json() == {"message": "Invalid access token"}
 
 
 def test_get_404_resource_not_found(
@@ -48,7 +47,7 @@ def test_get_404_resource_not_found(
         f"/{dataset_id}/{version}/subscribable", headers=auth_header
     )
     assert response.status_code == 404
-    assert json.loads(response.data) == {
+    assert response.json() == {
         "message": f"Event stream with id {dataset_id}/{version} does not exist"
     }
 
@@ -60,7 +59,7 @@ def test_get_500_server_error(
         f"/{dataset_id}/{version}/subscribable", headers=auth_header
     )
     assert response.status_code == 500
-    assert json.loads(response.data) == {"message": "Server error"}
+    assert response.json() == {"message": "Server error"}
 
 
 def test_put_200(
@@ -77,7 +76,7 @@ def test_put_200(
     )
 
     assert enabled_response.status_code == 200
-    assert json.loads(enabled_response.data).keys() == {
+    assert enabled_response.json().keys() == {
         "status",
         "updated_by",
         "updated_at",
@@ -95,7 +94,7 @@ def test_put_200(
     )
 
     assert disabled_response.status_code == 200
-    assert json.loads(disabled_response.data).keys() == {
+    assert disabled_response.json().keys() == {
         "status",
         "updated_by",
         "updated_at",
@@ -109,7 +108,7 @@ def test_put_401_invalid_token(mock_client, mock_keycloak, mock_authorizer):
         headers={"Authorization": "bearer blablabla"},
     )
     assert response.status_code == 401
-    assert json.loads(response.data) == {"message": "Invalid access token"}
+    assert response.json() == {"message": "Invalid access token"}
 
 
 def test_post_403_invalid_token(mock_client, mock_keycloak, mock_authorizer):
@@ -118,18 +117,63 @@ def test_post_403_invalid_token(mock_client, mock_keycloak, mock_authorizer):
         headers={"Authorization": f"bearer {valid_token_no_access}"},
     )
     assert response.status_code == 403
-    assert json.loads(response.data) == {"message": "Forbidden"}
+    assert response.json() == {"message": "Forbidden"}
 
 
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        (
+            {},
+            {
+                "detail": [
+                    {
+                        "loc": ["body"],
+                        "msg": "field required",
+                        "type": "value_error.missing",
+                    }
+                ]
+            },
+        ),
+        (
+            {"json": {"foo": "bar"}},
+            {
+                "detail": [
+                    {
+                        "loc": ["body", "enabled"],
+                        "msg": "field required",
+                        "type": "value_error.missing",
+                    }
+                ]
+            },
+        ),
+        (
+            {"json": {"enabled": "42"}},
+            {
+                "detail": [
+                    {
+                        "loc": ["body", "enabled"],
+                        "msg": "value could not be parsed to a boolean",
+                        "type": "type_error.bool",
+                    }
+                ]
+            },
+        ),
+    ],
+)
 def test_put_400_bad_request(
-    mock_client, mock_subscribable_service, mock_keycloak, mock_authorizer
+    test_input,
+    expected,
+    mock_client,
+    mock_subscribable_service,
+    mock_keycloak,
+    mock_authorizer,
 ):
-    for data in [{}, {"json": {"foo": "bar"}}, {"json": {"enabled": "yes"}}]:
-        response = mock_client.put(
-            path=f"/{dataset_id}/{version}/subscribable", headers=auth_header, **data
-        )
-        assert response.status_code == 400
-        assert json.loads(response.data) == {"message": "Bad request"}
+    response = mock_client.put(
+        f"/{dataset_id}/{version}/subscribable", headers=auth_header, **test_input
+    )
+    assert response.status_code == 422
+    assert response.json() == expected
 
 
 def test_put_404_resource_not_found(
@@ -144,7 +188,7 @@ def test_put_404_resource_not_found(
         json={"enabled": True},
     )
     assert response.status_code == 404
-    assert json.loads(response.data) == {
+    assert response.json() == {
         "message": f"Event stream with id {dataset_id}/{version} does not exist"
     }
 
@@ -161,7 +205,7 @@ def test_put_409_resource_conflict(
         json={"enabled": True},
     )
     assert response.status_code == 409
-    assert json.loads(response.data) == {
+    assert response.json() == {
         "message": f"Event stream with id {dataset_id}/{version} is already subscribable"
     }
 
@@ -171,7 +215,7 @@ def test_put_409_resource_conflict(
         json={"enabled": False},
     )
     assert response.status_code == 409
-    assert json.loads(response.data) == {
+    assert response.json() == {
         "message": f"Event stream with id {dataset_id}/{version} is not currently subscribable"
     }
 
@@ -188,7 +232,7 @@ def test_put_409_parent_not_ready_conflict(
         json={"enabled": True},
     )
     assert response.status_code == 409
-    assert json.loads(response.data) == {
+    assert response.json() == {
         "message": f"Event stream with id {dataset_id}/{version} is not ready"
     }
 
