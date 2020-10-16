@@ -5,8 +5,8 @@
 #    pip-compile
 #
 attrs==20.2.0             # via jsonschema
-boto3==1.15.7             # via event-stream-api (setup.py)
-botocore==1.18.7          # via boto3, s3transfer
+boto3==1.15.16            # via event-stream-api (setup.py)
+botocore==1.18.16         # via boto3, s3transfer
 certifi==2020.6.20        # via elasticsearch, requests
 chardet==3.0.4            # via requests
 ecdsa==0.14.1             # via python-jose
@@ -16,9 +16,9 @@ fastapi==0.61.1           # via event-stream-api (setup.py)
 idna==2.10                # via requests
 jmespath==0.10.0          # via boto3, botocore
 jsonschema==3.2.0         # via origo-sdk-python
-mangum==0.10.0             # via event-stream-api (setup.py)
+mangum==0.10.0            # via event-stream-api (setup.py)
 origo-sdk-python==0.2.3   # via event-stream-api (setup.py)
-prettytable==0.7.2        # via origo-sdk-python
+prettytable==1.0.1        # via origo-sdk-python
 pyasn1==0.4.8             # via python-jose, rsa
 pydantic==1.6.1           # via fastapi
 pyjwt==1.7.1              # via origo-sdk-python
@@ -36,6 +36,7 @@ six==1.15.0               # via ecdsa, elasticsearch-dsl, jsonschema, python-dat
 starlette==0.13.6         # via fastapi
 typing-extensions==3.7.4.3  # via mangum
 urllib3==1.25.10          # via botocore, elasticsearch, origo-sdk-python, requests
+wcwidth==0.2.5            # via prettytable
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

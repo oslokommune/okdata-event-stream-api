@@ -17,9 +17,12 @@ class ElasticsearchDataService:
         alias = "event_by_date"
         es = ElasticsearchConnection()
         es.connect_to_es(index, alias)
-        s = Search(using=alias, index=index).filter(
-            "range", tidspunkt={"gte": from_date, "lt": to_date}
-        )
+
+        timestamp_field = dataset.get("timestamp_field", "timestamp")
+
+        filter_args = {timestamp_field: {"gte": from_date, "lte": to_date}}
+        s = Search(using=alias, index=index).filter("range", **filter_args)
+
         response = s.execute()
 
         if not response:
@@ -29,16 +32,17 @@ class ElasticsearchDataService:
 
     def get_event_count(self, dataset_id, version, from_date, to_date):
         dataset = self.dataset_client.get_dataset(dataset_id)
-        index = f"processed-{dataset.confidentiality}-{dataset_id}-{version}-*"
+        index = f"processed-{dataset['confidentiality']}-{dataset_id}-{version}-*"
         alias = "event_by_count"
         es = ElasticsearchConnection()
         es.connect_to_es(index, alias)
+        timestamp_field = dataset.get("timestamp_field", "timestamp")
         body = {
             "size": 0,
             "aggs": {
                 "count_events": {
                     "range": {
-                        "field": "tidspunkt",
+                        "field": timestamp_field,
                         "ranges": [{"from": from_date, "to": to_date}],
                     }
                 }
