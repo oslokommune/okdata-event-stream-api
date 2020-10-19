@@ -107,4 +107,5 @@ The Elasticsearch sink's Cloud Formation stack contains the following AWS resour
 
 #### Get historical data
 
-When an Elasticsearch sink is enabled and when data is stored(not backward compatible ), you can access data in a given date through {url}/streams/{dataset-id}/{version}/events?from_date={from_date}&to_date={to_date}
+When an Elasticsearch sink is enabled and when data is stored(not backward compatible ), you can access data in a given date through: `{url}/streams/{dataset-id}/{version}/events?from_date={from_date}&to_date={to_date}`
+* Example prod: `https://api.data.oslo.systems/streams/renovasjonsbiler-status/1/events?from_date=2020-10-18&to_date=2020-10-19`
