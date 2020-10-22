@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import Depends, APIRouter
+from fastapi import APIRouter, Depends, Path, Query
 from datetime import date
 
 from resources.authorizer import dataset_owner, version_exists
@@ -22,12 +22,13 @@ def query_service(dataset_client=Depends(dataset_client)) -> ElasticsearchDataSe
     responses=error_message_models(400),
 )
 def get(
-    dataset_id: str,
-    version: str,
+    *,
+    dataset_id: str = Path(..., min_length=3, max_length=70, regex="^[a-z0-9-]*$"),
+    version: str = Path(..., min_length=1),
     from_date: date,
     to_date: date,
-    page: int = 1,
-    page_size: int = 10,
+    page: int = Query(1, gt=0),
+    page_size: int = Query(10, gt=0, lt=10001),
     query_service=Depends(query_service),
 ):
     logger.info(
