@@ -1,17 +1,21 @@
 import logging
+import math
 
 from origo.data.dataset import Dataset
 from database import ElasticsearchConnection
 from elasticsearch_dsl import Search
 
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class ElasticsearchDataService:
     def __init__(self, dataset_client: Dataset):
         self.dataset_client = dataset_client
 
-    def get_event_by_date(self, dataset_id, version, from_date, to_date):
+    def get_event_by_date(
+        self, dataset_id, version, from_date, to_date, page, page_size
+    ):
         dataset = self.dataset_client.get_dataset(dataset_id)
         index = f'processed-{dataset["confidentiality"]}-{dataset_id}-{version}-*'
         alias = "event_by_date"
@@ -23,12 +27,24 @@ class ElasticsearchDataService:
         filter_args = {timestamp_field: {"gte": from_date, "lte": to_date}}
         s = Search(using=alias, index=index).filter("range", **filter_args)
 
+        start_index = (page - 1) * page_size
+        end_index = page * page_size
+
+        s = s[start_index:end_index]
+
+        logger.info(f"search: {s.to_dict()}")
+
         response = s.execute()
 
         if not response:
             logger.warning("Could not get a response from ES")
             return None
-        return [e.to_dict() for e in s]
+
+        return {
+            "values": [e.to_dict() for e in s],
+            "page": page,
+            "total_pages": math.ceil(response.hits.total.value / page_size),
+        }
 
     def get_event_count(self, dataset_id, version, from_date, to_date):
         dataset = self.dataset_client.get_dataset(dataset_id)
