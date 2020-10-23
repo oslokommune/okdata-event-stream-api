@@ -97,10 +97,6 @@ jenkins-bump-patch: $(BUILD_VENV)/bin/bump2version is-git-clean
 $(BUILD_VENV)/bin/pip-compile: $(BUILD_VENV)
 	$(BUILD_PY) -m pip install -U pip-tools
 
-$(BUILD_VENV)/bin/tox: $(BUILD_VENV)
-	$(BUILD_PY) -m pip install -I virtualenv==16.7.9
-	$(BUILD_PY) -m pip install -U tox
-
 $(BUILD_VENV)/bin/%: $(BUILD_VENV)
 	$(BUILD_PY) -m pip install -U $*
 
