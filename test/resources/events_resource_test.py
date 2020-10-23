@@ -57,7 +57,9 @@ class TestGetEvent:
 ### Fixtures for TestGetEvent ###
 @pytest.fixture()
 def mock_event_data(monkeypatch):
-    def get_event_by_date(self, dataset_id, version, from_date, to_date):
+    def get_event_by_date(
+        self, dataset_id, version, from_date, to_date, page, page_size
+    ):
         return event_dummy_data
 
     monkeypatch.setattr(
@@ -69,7 +71,9 @@ def mock_event_data(monkeypatch):
 
 @pytest.fixture()
 def mock_event_no_data(monkeypatch):
-    def get_event_by_date(self, dataset_id, version, from_date, to_date):
+    def get_event_by_date(
+        self, dataset_id, version, from_date, to_date, page, page_size
+    ):
         return None
 
     monkeypatch.setattr(
