@@ -19,8 +19,6 @@ setup(
     py_modules=["app"],
     install_requires=[
         "boto3==1.15.16",
-        # Our dependency cocktail doesn't work with cfn-lint 0.39.0 and up.
-        "cfn-lint<0.39.0",
         "elasticsearch-dsl==7.2.1",
         "fastapi==0.61.1",
         "mangum==0.10.0",
