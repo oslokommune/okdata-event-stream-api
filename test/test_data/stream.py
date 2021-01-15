@@ -4,6 +4,7 @@ from clients.keycloak_config import KeycloakConfig
 dataset_id = "some-dataset-id"
 version = "1"
 sink_id = "727qH"
+accessRights = "public"
 confidentiality = "green"
 updated_by = "larsmonsen"
 created_at = "2020-01-21T09:28:57.831435+00:00"

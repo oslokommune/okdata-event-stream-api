@@ -121,6 +121,6 @@ def test_delete_fails_if_subresources_exist(mock_boto):
 def mock_dataset(monkeypatch):
     def get_dataset(self, id):
         if id == test_data.dataset_id:
-            return {"Id": id, "confidentiality": test_data.confidentiality}
+            return {"Id": id, "accessRights": test_data.accessRights}
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)

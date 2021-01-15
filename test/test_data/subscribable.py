@@ -6,6 +6,7 @@ from .stream import processed_and_raw_cf_template
 
 dataset_id = "some-dataset-id"
 version = "1"
+access_rights = "public"
 confidentiality = "green"
 updated_by = "tyholtapenes"
 utc_now = "2020-01-30T09:28:57.831435+00:00"

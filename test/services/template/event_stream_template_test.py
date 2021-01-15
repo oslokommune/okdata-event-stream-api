@@ -8,7 +8,7 @@ stream.create_pipeline_triggers = True
 
 
 def test_generate_event_stream_cf_template():
-    dataset = {"Id": test_data.dataset_id, "confidentiality": test_data.confidentiality}
+    dataset = {"Id": test_data.dataset_id, "accessRights": test_data.accessRights}
     template = EventStreamTemplate(
         dataset, test_data.version, test_data.updated_by, True
     )

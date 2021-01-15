@@ -4,7 +4,7 @@ from database import Sink
 from test import test_utils
 import test.test_data.sink as test_data
 
-dataset = {"Id": test_data.dataset_id, "confidentiality": test_data.confidentiality}
+dataset = {"Id": test_data.dataset_id, "accessRights": test_data.access_rights}
 
 
 def test_generate_sink_elasticsearch_cf_template():
@@ -31,7 +31,7 @@ def test_generate_sink_s3_cf_template():
 def test_really_long_role_name():
     dataset = {
         "Id": "a-really-long-dataset-id-to-test-our-limits-and-beyond",
-        "confidentiality": test_data.confidentiality,
+        "accessRights": test_data.access_rights,
     }
     sink = Sink(type="elasticsearch")
     sink.id = test_data.elasticsearch_sink_id

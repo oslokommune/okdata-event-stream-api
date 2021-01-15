@@ -122,6 +122,6 @@ def test_disable_subscription(mock_boto, mock_dataset):
 def mock_dataset(monkeypatch):
     def get_dataset(self, id):
         if id == test_data.dataset_id:
-            return {"Id": id, "confidentiality": test_data.confidentiality}
+            return {"Id": id, "accessRights": test_data.access_rights}
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)
