@@ -329,6 +329,10 @@ def mock_event_get_stream(monkeypatch):
     monkeypatch.setattr(EventStreamService, "get_event_stream", get_event_stream)
 
     def get_dataset(self, dataset_id):
-        return {"Id": "my-test-dataset", "accessRights": "public"}
+        return {
+            "Id": "my-test-dataset",
+            "accessRights": "public",
+            "confidentiality": "green",
+        }
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)

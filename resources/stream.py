@@ -49,6 +49,7 @@ class EventStreamOut(BaseModel):
 
 class EventStreamWithAcccessRightsOut(EventStreamOut):
     accessRights: str
+    confidentiality: str  # Temporary: Remove once phased out in the CLI/SDK
 
 
 @router.post(
@@ -101,7 +102,12 @@ def post(
     ),
 )
 def get(dataset=Depends(dataset_exists), event_stream=Depends(get_event_stream)):
-    return event_stream.copy(update={"accessRights": dataset["accessRights"]})
+    return event_stream.copy(
+        update={
+            "accessRights": dataset["accessRights"],
+            "confidentiality": dataset["confidentiality"],
+        }
+    )
 
 
 @router.put(
