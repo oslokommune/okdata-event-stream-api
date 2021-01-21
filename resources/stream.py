@@ -12,6 +12,7 @@ from services import (
     ResourceConflict,
     ResourceNotFound,
 )
+from util import CONFIDENTIALITY_MAP
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -105,7 +106,7 @@ def get(dataset=Depends(dataset_exists), event_stream=Depends(get_event_stream))
     return event_stream.copy(
         update={
             "accessRights": dataset["accessRights"],
-            "confidentiality": dataset["confidentiality"],
+            "confidentiality": CONFIDENTIALITY_MAP[dataset["accessRights"]],
         }
     )
 
