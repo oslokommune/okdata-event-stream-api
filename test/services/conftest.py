@@ -9,7 +9,7 @@ from origo.data.dataset import Dataset
 @pytest.fixture
 def mock_dataset(monkeypatch):
     def get_dataset(self, datasetid):
-        return {"confidentiality": "green"}
+        return {"accessRights": "public"}
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)
 

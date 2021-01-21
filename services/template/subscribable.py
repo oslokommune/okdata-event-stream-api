@@ -1,5 +1,7 @@
 import os
+
 from database import StackTemplate
+from util import CONFIDENTIALITY_MAP
 
 ENV = os.environ["ORIGO_ENVIRONMENT"]
 
@@ -11,7 +13,10 @@ class SubscribableTemplate:
         self.batch_size = 10
 
     def get_stream_name(self):
-        return f"dp.{self.dataset['confidentiality']}.{self.dataset['Id']}.processed.{self.version}.json"
+        confidentiality = CONFIDENTIALITY_MAP[self.dataset["accessRights"]]
+        return (
+            f"dp.{confidentiality}.{self.dataset['Id']}.processed.{self.version}.json"
+        )
 
     def get_event_publisher_lambda(self):
         return f"event-data-subscription-{ENV}-publish_event"

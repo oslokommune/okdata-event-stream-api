@@ -12,6 +12,7 @@ from services import (
     ResourceConflict,
     ResourceNotFound,
 )
+from util import CONFIDENTIALITY_MAP
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -47,8 +48,9 @@ class EventStreamOut(BaseModel):
     cf_status: str = Field("INACTIVE", max_length=20, alias="status")
 
 
-class EventStreamWithConfidentialityOut(EventStreamOut):
-    confidentiality: str
+class EventStreamWithAcccessRightsOut(EventStreamOut):
+    accessRights: str
+    confidentiality: str  # Temporary: Remove once phased out in the CLI/SDK
 
 
 @router.post(
@@ -94,14 +96,19 @@ def post(
 @router.get(
     "",
     dependencies=[Depends(dataset_owner), Depends(version_exists)],
-    response_model=EventStreamWithConfidentialityOut,
+    response_model=EventStreamWithAcccessRightsOut,
     response_model_by_alias=True,
     responses=error_message_models(
         status.HTTP_404_NOT_FOUND,
     ),
 )
 def get(dataset=Depends(dataset_exists), event_stream=Depends(get_event_stream)):
-    return event_stream.copy(update={"confidentiality": dataset["confidentiality"]})
+    return event_stream.copy(
+        update={
+            "accessRights": dataset["accessRights"],
+            "confidentiality": CONFIDENTIALITY_MAP[dataset["accessRights"]],
+        }
+    )
 
 
 @router.put(

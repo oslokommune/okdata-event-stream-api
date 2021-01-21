@@ -1,9 +1,11 @@
 import logging
 import math
 
-from origo.data.dataset import Dataset
-from database import ElasticsearchConnection
 from elasticsearch_dsl import Search
+from origo.data.dataset import Dataset
+
+from database import ElasticsearchConnection
+from util import CONFIDENTIALITY_MAP
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -17,7 +19,8 @@ class ElasticsearchDataService:
         self, dataset_id, version, from_date, to_date, page, page_size
     ):
         dataset = self.dataset_client.get_dataset(dataset_id)
-        index = f'processed-{dataset["confidentiality"]}-{dataset_id}-{version}-*'
+        confidentiality = CONFIDENTIALITY_MAP[dataset["accessRights"]]
+        index = f"processed-{confidentiality}-{dataset_id}-{version}-*"
         alias = "event_by_date"
         es = ElasticsearchConnection()
         es.connect_to_es(index, alias)

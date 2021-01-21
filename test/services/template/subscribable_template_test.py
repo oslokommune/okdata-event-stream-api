@@ -5,7 +5,7 @@ import test.test_data.subscribable as test_data
 
 
 def test_generate_subscribable_cf_template():
-    dataset = {"Id": test_data.dataset_id, "confidentiality": test_data.confidentiality}
+    dataset = {"Id": test_data.dataset_id, "accessRights": test_data.access_rights}
     template = SubscribableTemplate(dataset, test_data.version)
     subscribable_template = template.generate_stack_template()
 

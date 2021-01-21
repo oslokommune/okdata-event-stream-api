@@ -211,7 +211,7 @@ class TestGetStreamResource:
         data = response.json()
         assert response.status_code == 200
         assert data["id"] == "my-test-dataset"
-        assert data["confidentiality"] == "green"
+        assert data["accessRights"] == "public"
 
     def test_get_403_no_access(self, mock_client, mock_keycloak, mock_authorizer):
         response = mock_client.get(
@@ -329,6 +329,10 @@ def mock_event_get_stream(monkeypatch):
     monkeypatch.setattr(EventStreamService, "get_event_stream", get_event_stream)
 
     def get_dataset(self, dataset_id):
-        return {"Id": "my-test-dataset", "confidentiality": "green"}
+        return {
+            "Id": "my-test-dataset",
+            "accessRights": "public",
+            "confidentiality": "green",
+        }
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)

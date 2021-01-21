@@ -1,5 +1,7 @@
 import os
+
 from database import StackTemplate
+from util import CONFIDENTIALITY_MAP
 
 ENV = os.environ["ORIGO_ENVIRONMENT"]
 
@@ -19,7 +21,7 @@ class EventStreamTemplate:
         self.batch_window = 10
 
     def get_stream_name(self, stage) -> str:
-        confidentiality = self.dataset["confidentiality"]
+        confidentiality = CONFIDENTIALITY_MAP[self.dataset["accessRights"]]
         return f"dp.{confidentiality}.{self.dataset['Id']}.{stage}.{self.version}.json"
 
     def generate_stack_template(self) -> StackTemplate:

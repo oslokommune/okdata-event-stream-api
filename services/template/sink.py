@@ -1,5 +1,7 @@
 import os
+
 from database import EventStream, Sink, SinkType, StackTemplate
+from util import CONFIDENTIALITY_MAP
 
 ENV = os.environ["ORIGO_ENVIRONMENT"]
 
@@ -30,8 +32,9 @@ class SinkTemplate:
 
     ##### Kinesis source related functions #####
     def get_kinesis_source_stream(self) -> str:
-        # Kinesis source name, this is where we read data from
-        return f"dp.{self.dataset['confidentiality']}.{self.dataset['Id']}.{self.get_processing_stage()}.{self.version}.json"
+        """Return the Kinesis source name. This is where we read data from."""
+        confidentiality = CONFIDENTIALITY_MAP[self.dataset["accessRights"]]
+        return f"dp.{confidentiality}.{self.dataset['Id']}.{self.get_processing_stage()}.{self.version}.json"
 
     def get_kinesis_source_arn(self) -> str:
         # Full ARN for the source stream
@@ -48,14 +51,23 @@ class SinkTemplate:
         return f"arn:aws:s3:::ok-origo-dataplatform-{ENV}"
 
     def get_s3_output_prefix(self) -> str:
-        # Output path follows standard dataset output up until the version (no edition)
-        return f"{self.get_processing_stage()}/{self.dataset['confidentiality']}/{self.dataset['Id']}/version={self.version}"
+        """Return the S3 output prefix.
+
+        The prefix follows standard dataset output format up until the version
+        (no edition).
+        """
+        confidentiality = CONFIDENTIALITY_MAP[self.dataset["accessRights"]]
+        return f"{self.get_processing_stage()}/{confidentiality}/{self.dataset['Id']}/version={self.version}"
 
     ##### Elasticsearch related functions
     def get_elasticsearch_index_name(self) -> str:
-        # Base name for Elasticsearch index where we will push data
-        # Since we are rotating index the actual Elasticsearch index will have a {year}-{month} postfix
-        index = f"{self.get_processing_stage()}-{self.dataset['confidentiality']}-{self.dataset['Id']}-{self.version}"
+        """Return the base name for the Elasticsearch index where we will push data.
+
+        Since we are rotating index the actual Elasticsearch index will have a
+        {year}-{month} postfix.
+        """
+        confidentiality = CONFIDENTIALITY_MAP[self.dataset["accessRights"]]
+        index = f"{self.get_processing_stage()}-{confidentiality}-{self.dataset['Id']}-{self.version}"
         return index.lower()  # ES indexes MUST be lower
 
     def get_elasticsearch_destination_domain(self) -> str:

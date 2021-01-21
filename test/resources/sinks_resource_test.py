@@ -328,7 +328,7 @@ def mock_event_get_stream(monkeypatch):
     monkeypatch.setattr(SinkService, "get_event_stream", get_event_stream)
 
     def get_dataset(self, dataset_id):
-        return {"Id": "my-test-dataset", "confidentiality": "green"}
+        return {"Id": "my-test-dataset", "accessRights": "public"}
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)
 
@@ -351,6 +351,6 @@ def mock_event_get_stream_with_s3_sink(monkeypatch):
     monkeypatch.setattr(SinkService, "get_event_stream", get_event_stream)
 
     def get_dataset(self, dataset_id):
-        return {"Id": "my-test-dataset", "confidentiality": "green"}
+        return {"Id": "my-test-dataset", "accessRights": "public"}
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)

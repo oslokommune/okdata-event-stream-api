@@ -2,6 +2,7 @@ from database import EventStream
 
 dataset_id = "my-dataset-id"
 version = "1"
+access_rights = "public"
 confidentiality = "green"
 updated_by = "pompelogpilt"
 elasticsearch_sink_id = "abcde"
