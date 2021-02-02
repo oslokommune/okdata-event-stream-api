@@ -15,17 +15,15 @@ auth_header = {"Authorization": f"bearer {valid_token}"}
 
 class TestPostStreamResource:
     def test_post_201(
-        self, mock_client, mock_event_stream_service, mock_keycloak, mock_authorizer
+        self,
+        mock_client,
+        mock_event_stream_service,
+        mock_keycloak,
+        mock_authorizer,
+        mock_dataset,
+        mock_dataset_versions,
     ):
         response = mock_client.post(f"/{dataset_id}/{version}", headers=auth_header)
-
-        EventStreamService.create_event_stream.assert_called_once_with(
-            self=ANY,
-            dataset_id=dataset_id,
-            version=version,
-            updated_by=username,
-            create_raw=True,
-        )
 
         assert response.status_code == 201
         assert response.json() == {
@@ -37,8 +35,22 @@ class TestPostStreamResource:
             "status": test_data.event_stream.cf_status,
         }
 
+        EventStreamService.create_event_stream.assert_called_once_with(
+            self=ANY,
+            dataset_id=dataset_id,
+            version=version,
+            updated_by=username,
+            create_raw=True,
+        )
+
     def test_post_not_create_raw(
-        self, mock_client, mock_event_stream_service, mock_keycloak, mock_authorizer
+        self,
+        mock_client,
+        mock_event_stream_service,
+        mock_keycloak,
+        mock_authorizer,
+        mock_dataset,
+        mock_dataset_versions,
     ):
         mock_client.post(
             f"/{dataset_id}/{version}", json={"create_raw": False}, headers=auth_header
@@ -89,6 +101,8 @@ class TestPostStreamResource:
         mock_event_stream_service_resource_conflict,
         mock_keycloak,
         mock_authorizer,
+        mock_dataset,
+        mock_dataset_versions,
     ):
         response = mock_client.post(
             f"/{dataset_id}/{version}", json={"create_raw": False}, headers=auth_header
@@ -104,10 +118,29 @@ class TestPostStreamResource:
         mock_event_stream_service_server_error,
         mock_keycloak,
         mock_authorizer,
+        mock_dataset,
+        mock_dataset_versions,
     ):
         response = mock_client.post(f"/{dataset_id}/{version}", headers=auth_header)
         assert response.status_code == 500
         assert response.json() == {"message": "Server error"}
+
+    def test_post_400_invalid_source_type(
+        self,
+        mock_client,
+        mock_event_stream_service,
+        mock_keycloak,
+        mock_authorizer,
+        mock_invalid_dataset_source,
+    ):
+        response = mock_client.post(f"/{dataset_id}/{version}", headers=auth_header)
+
+        assert response.status_code == 400
+        assert response.json() == {
+            "message": f"Invalid source type 'file' for dataset {dataset_id}. Dataset source must be of type: 'event'"
+        }
+
+        assert EventStreamService.create_event_stream.call_count == 0
 
 
 class TestDeleteStreamResource:
@@ -315,7 +348,7 @@ def mock_event_get_stream_no_dataset(monkeypatch):
 
 
 @pytest.fixture()
-def mock_event_get_stream(monkeypatch):
+def mock_event_get_stream(monkeypatch, mock_dataset):
     def get_event_stream(self, dataset_id, version):
         return EventStream(
             id="my-test-dataset",
@@ -328,11 +361,28 @@ def mock_event_get_stream(monkeypatch):
 
     monkeypatch.setattr(EventStreamService, "get_event_stream", get_event_stream)
 
+
+@pytest.fixture()
+def mock_dataset(monkeypatch):
     def get_dataset(self, dataset_id):
         return {
             "Id": "my-test-dataset",
             "accessRights": "public",
             "confidentiality": "green",
+            "source": {"type": "event"},
+        }
+
+    monkeypatch.setattr(Dataset, "get_dataset", get_dataset)
+
+
+@pytest.fixture()
+def mock_invalid_dataset_source(monkeypatch):
+    def get_dataset(self, dataset_id):
+        return {
+            "Id": "my-test-dataset",
+            "accessRights": "public",
+            "confidentiality": "green",
+            "source": {"type": "file"},
         }
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)

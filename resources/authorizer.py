@@ -67,3 +67,12 @@ def version_exists(
         404,
         f"Version: {version} for dataset '{dataset_id}' not found",
     )
+
+
+def is_event_source(dataset_id: str, dataset=Depends(dataset_exists)) -> bool:
+    source_type = dataset.get("source", {}).get("type")
+    if source_type == "event":
+        return True
+
+    message = f"Invalid source type '{source_type}' for dataset {dataset_id}. Dataset source must be of type: 'event'"
+    raise ErrorResponse(400, message)

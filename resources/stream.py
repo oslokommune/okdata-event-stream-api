@@ -4,7 +4,13 @@ from datetime import datetime
 from fastapi import Depends, APIRouter, status, Body
 from pydantic import BaseModel, Field
 
-from resources.authorizer import AuthInfo, dataset_owner, dataset_exists, version_exists
+from resources.authorizer import (
+    AuthInfo,
+    dataset_owner,
+    dataset_exists,
+    version_exists,
+    is_event_source,
+)
 from resources.origo_clients import dataset_client
 from resources.errors import ErrorResponse, error_message_models, Message
 from services import (
@@ -55,10 +61,15 @@ class EventStreamWithAcccessRightsOut(EventStreamOut):
 
 @router.post(
     "",
-    dependencies=[Depends(dataset_owner)],
+    dependencies=[
+        Depends(dataset_owner),
+        Depends(is_event_source),
+        Depends(version_exists),
+    ],
     response_model=EventStreamOut,
     status_code=status.HTTP_201_CREATED,
     responses=error_message_models(
+        status.HTTP_400_BAD_REQUEST,
         status.HTTP_404_NOT_FOUND,
         status.HTTP_409_CONFLICT,
         status.HTTP_500_INTERNAL_SERVER_ERROR,
