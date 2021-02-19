@@ -1,8 +1,8 @@
 from unittest.mock import ANY
 
 from elasticsearch_dsl import Search
+from okdata.sdk.data.dataset import Dataset
 
-from origo.data.dataset import Dataset
 from services.events import ElasticsearchDataService
 
 

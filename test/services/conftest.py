@@ -1,9 +1,9 @@
 import pytest
-
-from database import ElasticsearchConnection
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.response import Response
-from origo.data.dataset import Dataset
+from okdata.sdk.data.dataset import Dataset
+
+from database import ElasticsearchConnection
 
 
 @pytest.fixture

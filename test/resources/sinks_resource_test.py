@@ -1,5 +1,5 @@
 import pytest
-from origo.data.dataset import Dataset
+from okdata.sdk.data.dataset import Dataset
 
 import test.test_data.stream as test_data
 from .conftest import valid_token

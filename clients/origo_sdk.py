@@ -1,5 +1,6 @@
-from origo.sdk import SDK
-from origo.config import Config
+from okdata.sdk import SDK
+from okdata.sdk.config import Config
+
 from .keycloak_config import KeycloakConfig
 
 

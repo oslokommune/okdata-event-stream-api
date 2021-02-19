@@ -1,9 +1,9 @@
 import json
+
 import pytest
 from freezegun import freeze_time
 import dateutil.parser as date_parser
-
-from origo.data.dataset import Dataset
+from okdata.sdk.data.dataset import Dataset
 
 from clients import setup_origo_sdk
 from services import SubscribableService

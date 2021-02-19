@@ -11,7 +11,7 @@ from database import Subscribable
 
 
 event_publisher_lambda_name = (
-    f"event-data-subscription-{os.environ['ORIGO_ENVIRONMENT']}-publish_event"
+    f"event-data-subscription-{os.environ['OKDATA_ENVIRONMENT']}-publish_event"
 )
 
 

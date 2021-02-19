@@ -1,7 +1,8 @@
 import pytest
 import dateutil.parser as date_parser
 from freezegun import freeze_time
-from origo.data.dataset import Dataset
+from okdata.sdk.data.dataset import Dataset
+
 from services import EventStreamService, ResourceConflict, ResourceNotFound
 
 from clients import setup_origo_sdk, CloudformationClient

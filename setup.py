@@ -22,7 +22,7 @@ setup(
         "elasticsearch-dsl==7.2.1",
         "fastapi==0.61.1",
         "mangum==0.10.0",
-        "origo-sdk-python==0.2.3",
+        "okdata-sdk",
         "pytz",
         "requests-aws4auth==1.0",
         "shortuuid",
