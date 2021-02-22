@@ -3,7 +3,7 @@ import os
 from database import StackTemplate
 from util import CONFIDENTIALITY_MAP
 
-ENV = os.environ["ORIGO_ENVIRONMENT"]
+ENV = os.environ["OKDATA_ENVIRONMENT"]
 
 
 class SubscribableTemplate:

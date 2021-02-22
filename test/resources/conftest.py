@@ -1,8 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 from keycloak import KeycloakOpenID
-from origo.data.dataset import Dataset
-from origo.dataset_authorizer.simple_dataset_authorizer_client import (
+from okdata.sdk.data.dataset import Dataset
+from okdata.sdk.dataset_authorizer.simple_dataset_authorizer_client import (
     SimpleDatasetAuthorizerClient,
 )
 

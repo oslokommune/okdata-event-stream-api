@@ -1,9 +1,10 @@
-from origo.data.dataset import Dataset
+from unittest.mock import ANY
+
+import pytest
+from okdata.sdk.data.dataset import Dataset
 
 from services import ResourceConflict, EventStreamService, ResourceNotFound
-import pytest
 import test.test_data.stream as test_data
-from unittest.mock import ANY
 from .conftest import username, valid_token, valid_token_no_access
 from database.models import EventStream
 

@@ -3,10 +3,10 @@ import os
 from database import StackTemplate
 from util import CONFIDENTIALITY_MAP
 
-ENV = os.environ["ORIGO_ENVIRONMENT"]
+ENV = os.environ["OKDATA_ENVIRONMENT"]
 
 pipeline_router_lambda_name = (
-    f"pipeline-router-{os.environ['ORIGO_ENVIRONMENT']}-route-kinesis"
+    f"pipeline-router-{os.environ['OKDATA_ENVIRONMENT']}-route-kinesis"
 )
 
 

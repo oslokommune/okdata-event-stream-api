@@ -2,7 +2,7 @@ import logging
 import math
 
 from elasticsearch_dsl import Search
-from origo.data.dataset import Dataset
+from okdata.sdk.data.dataset import Dataset
 
 from database import ElasticsearchConnection
 from util import CONFIDENTIALITY_MAP

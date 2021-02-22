@@ -1,4 +1,5 @@
-from origo.data.dataset import Dataset
+from okdata.sdk.data.dataset import Dataset
+
 from database import EventStreamsTable, EventStream
 from clients import CloudformationClient
 from services import datetime_utils

@@ -26,15 +26,15 @@ Set necessary environment variables:
 ```
 export AWS_PROFILE=saml-origo-dev
 export AWS_REGION=eu-west-1
-export ORIGO_ENVIRONMENT=dev
+export OKDATA_ENVIRONMENT=dev
 ```
 
 Start up Flask app locally. Binds to port 5000 by default:
 ```
 make run
 ```
-Note: `make init` will not install the boto3 library, since this dependency is already installed on the server. 
-Therefore you must either run `make test` (which installs boto3) or run `.build_venv/bin/python -m pip install boto3` before 
+Note: `make init` will not install the boto3 library, since this dependency is already installed on the server.
+Therefore you must either run `make test` (which installs boto3) or run `.build_venv/bin/python -m pip install boto3` before
 `make run`
 
 Change port/environment:
