@@ -51,7 +51,8 @@ class ElasticsearchDataService:
 
     def get_event_count(self, dataset_id, version, from_date, to_date):
         dataset = self.dataset_client.get_dataset(dataset_id)
-        index = f"processed-{dataset['confidentiality']}-{dataset_id}-{version}-*"
+        confidentiality = CONFIDENTIALITY_MAP[dataset["accessRights"]]
+        index = f"processed-{confidentiality}-{dataset_id}-{version}-*"
         alias = "event_by_count"
         es = ElasticsearchConnection()
         es.connect_to_es(index, alias)
