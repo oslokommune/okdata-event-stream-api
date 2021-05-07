@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import Depends, APIRouter
 from pydantic import BaseModel, Field
 
-from resources.authorizer import AuthInfo, dataset_owner
+from resources.authorizer import AuthInfo, authorize
 from resources.origo_clients import dataset_client
 from resources.errors import ErrorResponse, error_message_models
 from services import SubscribableService
@@ -59,7 +59,7 @@ def get(
 
 @router.put(
     "",
-    dependencies=[Depends(dataset_owner)],
+    dependencies=[Depends(authorize("okdata:dataset:update"))],
     response_model=SubscribableOut,
     response_model_by_alias=True,
     responses=error_message_models(404, 409, 500),

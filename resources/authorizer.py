@@ -1,13 +1,18 @@
 from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from clients import setup_keycloak_client, get_keycloak_config
+from okdata.resource_auth import ResourceAuthorizer
 
+from clients import setup_keycloak_client, get_keycloak_config
 from .errors import ErrorResponse
-from .origo_clients import simple_dataset_authorizer_client, dataset_client
+from .origo_clients import dataset_client
 
 
 def keycloak_client(keycloak_config=Depends(get_keycloak_config)):
     return setup_keycloak_client(keycloak_config)
+
+
+def resource_authorizer() -> ResourceAuthorizer:
+    return ResourceAuthorizer()
 
 
 http_bearer = HTTPBearer(scheme_name="Keycloak token")
@@ -31,16 +36,18 @@ class AuthInfo:
         self.bearer_token = authorization.credentials
 
 
-def dataset_owner(
-    dataset_id: str,
-    auth_info: AuthInfo = Depends(),
-    simple_dataset_authorizer_client=Depends(simple_dataset_authorizer_client),
-):
-    dataset_access = simple_dataset_authorizer_client.check_dataset_access(
-        dataset_id, bearer_token=auth_info.bearer_token
-    )
-    if not dataset_access["access"]:
-        raise ErrorResponse(403, "Forbidden")
+def authorize(scope: str):
+    def _verify_permission(
+        dataset_id: str,
+        auth_info: AuthInfo = Depends(),
+        resource_authorizer: ResourceAuthorizer = Depends(resource_authorizer),
+    ):
+        if not resource_authorizer.has_access(
+            auth_info.bearer_token, scope, f"okdata:dataset:{dataset_id}"
+        ):
+            raise ErrorResponse(403, "Forbidden")
+
+    return _verify_permission
 
 
 def dataset_exists(dataset_id: str, dataset_client=Depends(dataset_client)) -> dict:

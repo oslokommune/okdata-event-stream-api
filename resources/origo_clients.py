@@ -1,8 +1,6 @@
 from fastapi import Depends
 from okdata.sdk.data.dataset import Dataset
-from okdata.sdk.dataset_authorizer.simple_dataset_authorizer_client import (
-    SimpleDatasetAuthorizerClient,
-)
+
 
 from clients import setup_origo_sdk, get_keycloak_config
 
@@ -15,5 +13,4 @@ class OrigoSDK:
         return setup_origo_sdk(keycloak_config, self.sdk)
 
 
-simple_dataset_authorizer_client = OrigoSDK(SimpleDatasetAuthorizerClient)
 dataset_client = OrigoSDK(Dataset)

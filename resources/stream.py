@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from resources.authorizer import (
     AuthInfo,
-    dataset_owner,
+    authorize,
     dataset_exists,
     version_exists,
     is_event_source,
@@ -62,7 +62,7 @@ class EventStreamWithAcccessRightsOut(EventStreamOut):
 @router.post(
     "",
     dependencies=[
-        Depends(dataset_owner),
+        Depends(authorize("okdata:dataset:update")),
         Depends(is_event_source),
         Depends(version_exists),
     ],
@@ -106,7 +106,7 @@ def post(
 
 @router.get(
     "",
-    dependencies=[Depends(dataset_owner), Depends(version_exists)],
+    dependencies=[Depends(authorize("okdata:dataset:update")), Depends(version_exists)],
     response_model=EventStreamWithAcccessRightsOut,
     response_model_by_alias=True,
     responses=error_message_models(
@@ -124,7 +124,7 @@ def get(dataset=Depends(dataset_exists), event_stream=Depends(get_event_stream))
 
 @router.put(
     "",
-    dependencies=[Depends(dataset_owner), Depends(version_exists)],
+    dependencies=[Depends(authorize("okdata:dataset:update")), Depends(version_exists)],
     status_code=status.HTTP_501_NOT_IMPLEMENTED,
     response_model=Message,
 )
@@ -134,7 +134,7 @@ def put():
 
 @router.delete(
     "",
-    dependencies=[Depends(dataset_owner), Depends(version_exists)],
+    dependencies=[Depends(authorize("okdata:dataset:update")), Depends(version_exists)],
     response_model=Message,
     responses=error_message_models(
         status.HTTP_404_NOT_FOUND,

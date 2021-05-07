@@ -2,7 +2,7 @@ import logging
 from fastapi import Depends, APIRouter
 from datetime import date
 
-from resources.authorizer import dataset_owner, version_exists
+from resources.authorizer import authorize, version_exists
 from resources.origo_clients import dataset_client
 from resources.errors import ErrorResponse, error_message_models
 from services import ElasticsearchDataService
@@ -17,7 +17,7 @@ def query_service(dataset_client=Depends(dataset_client)) -> ElasticsearchDataSe
 
 @router.get(
     "",
-    dependencies=[Depends(dataset_owner), Depends(version_exists)],
+    dependencies=[Depends(authorize("okdata:dataset:read")), Depends(version_exists)],
     responses=error_message_models(400),
 )
 def count(

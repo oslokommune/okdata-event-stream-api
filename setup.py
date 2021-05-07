@@ -26,5 +26,6 @@ setup(
         "pytz",
         "requests-aws4auth==1.0",
         "shortuuid",
+        "okdata-resource-auth",
     ],
 )

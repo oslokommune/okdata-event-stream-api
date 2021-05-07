@@ -23,6 +23,9 @@ provider:
     OKDATA_ENVIRONMENT: ${self:provider.stage}
     ES_API_ENDPOINT: ${ssm:/dataplatform/shared/eventdata-elasticsearch-endpoint}
     ROOT_PATH: "/streams"
+    KEYCLOAK_SERVER: ${ssm:/dataplatform/shared/keycloak-server-url}
+    KEYCLOAK_REALM: api-catalog
+    RESOURCE_SERVER_CLIENT_ID: okdata-resource-server
 package:
   exclude:
     - "**/*"

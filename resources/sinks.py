@@ -4,7 +4,7 @@ from datetime import datetime
 from fastapi import Depends, APIRouter, status
 from pydantic import BaseModel, Field
 
-from resources.authorizer import AuthInfo, dataset_owner, version_exists
+from resources.authorizer import AuthInfo, authorize, version_exists
 from resources.origo_clients import dataset_client
 from resources.errors import ErrorResponse, error_message_models
 from services import (
@@ -38,7 +38,7 @@ class SinkOut(SinkIn):
 @router.get(
     "/{sink_type}",
     dependencies=[
-        Depends(dataset_owner),
+        Depends(authorize("okdata:dataset:update")),
         Depends(version_exists),
     ],
     response_model=SinkOut,
@@ -71,7 +71,7 @@ def get(
 @router.delete(
     "/{sink_type}",
     dependencies=[
-        Depends(dataset_owner),
+        Depends(authorize("okdata:dataset:update")),
         Depends(version_exists),
     ],
     responses=error_message_models(400, 404, 409, 500),
@@ -115,7 +115,7 @@ def delete(
 @router.post(
     "",
     dependencies=[
-        Depends(dataset_owner),
+        Depends(authorize("okdata:dataset:update")),
         Depends(version_exists),
     ],
     response_model=SinkOut,
@@ -158,7 +158,7 @@ def post(
 @router.get(
     "",
     dependencies=[
-        Depends(dataset_owner),
+        Depends(authorize("okdata:dataset:update")),
         Depends(version_exists),
     ],
     response_model=List[SinkOut],

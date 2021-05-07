@@ -36,6 +36,8 @@ jsonschema==3.2.0
     # via okdata-sdk
 mangum==0.10.0
     # via event-stream-api (setup.py)
+okdata-resource-auth==0.1.0
+    # via event-stream-api (setup.py)
 okdata-sdk==0.6.2
     # via event-stream-api (setup.py)
 prettytable==1.0.1
@@ -64,6 +66,7 @@ requests-aws4auth==1.0
     # via event-stream-api (setup.py)
 requests==2.24.0
     # via
+    #   okdata-resource-auth
     #   okdata-sdk
     #   python-keycloak
     #   requests-aws4auth

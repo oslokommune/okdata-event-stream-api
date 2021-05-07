@@ -2,9 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from keycloak import KeycloakOpenID
 from okdata.sdk.data.dataset import Dataset
-from okdata.sdk.dataset_authorizer.simple_dataset_authorizer_client import (
-    SimpleDatasetAuthorizerClient,
-)
+from okdata.resource_auth import ResourceAuthorizer
 
 from app import app
 
@@ -21,15 +19,14 @@ username = "janedoe"
 
 @pytest.fixture
 def mock_authorizer(monkeypatch):
-    def dataset_access(self, dataset, bearer_token):
-        if bearer_token == valid_token:
-            return {"access": True}
-        else:
-            return {"access": False}
+    def has_access(self, bearer_token, scope, resource_name=None, use_whitelist=False):
+        return (
+            bearer_token == valid_token
+            and scope in ["okdata:dataset:update", "okdata:dataset:read"]
+            and resource_name.startswith("okdata:dataset:")
+        )
 
-    monkeypatch.setattr(
-        SimpleDatasetAuthorizerClient, "check_dataset_access", dataset_access
-    )
+    monkeypatch.setattr(ResourceAuthorizer, "has_access", has_access)
 
 
 @pytest.fixture
