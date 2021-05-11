@@ -4,25 +4,25 @@
 #
 #    pip-compile
 #
-attrs==20.2.0
+attrs==21.2.0
     # via jsonschema
 boto3==1.15.16
     # via event-stream-api (setup.py)
-botocore==1.18.16
+botocore==1.18.18
     # via
     #   boto3
     #   s3transfer
-certifi==2020.6.20
+certifi==2020.12.5
     # via
     #   elasticsearch
     #   requests
-chardet==3.0.4
+chardet==4.0.0
     # via requests
 ecdsa==0.14.1
     # via python-jose
 elasticsearch-dsl==7.2.1
     # via event-stream-api (setup.py)
-elasticsearch==7.9.1
+elasticsearch==7.12.1
     # via elasticsearch-dsl
 fastapi==0.61.1
     # via event-stream-api (setup.py)
@@ -38,17 +38,17 @@ mangum==0.10.0
     # via event-stream-api (setup.py)
 okdata-resource-auth==0.1.0
     # via event-stream-api (setup.py)
-okdata-sdk==0.6.2
+okdata-sdk==0.8.1
     # via event-stream-api (setup.py)
-prettytable==1.0.1
+prettytable==2.1.0
     # via okdata-sdk
 pyasn1==0.4.8
     # via
     #   python-jose
     #   rsa
-pydantic==1.6.1
+pydantic==1.8.1
     # via fastapi
-pyjwt==1.7.1
+pyjwt==2.1.0
     # via okdata-sdk
 pyrsistent==0.17.3
     # via jsonschema
@@ -58,25 +58,25 @@ python-dateutil==2.8.1
     #   elasticsearch-dsl
 python-jose==3.2.0
     # via python-keycloak
-python-keycloak==0.22.0
+python-keycloak==0.24.0
     # via okdata-sdk
-pytz==2020.1
+pytz==2021.1
     # via event-stream-api (setup.py)
 requests-aws4auth==1.0
     # via event-stream-api (setup.py)
-requests==2.24.0
+requests==2.25.1
     # via
     #   okdata-resource-auth
     #   okdata-sdk
     #   python-keycloak
     #   requests-aws4auth
-rsa==4.6
+rsa==4.7.2
     # via python-jose
-s3transfer==0.3.3
+s3transfer==0.3.7
     # via boto3
 shortuuid==1.0.1
     # via event-stream-api (setup.py)
-six==1.15.0
+six==1.16.0
     # via
     #   ecdsa
     #   elasticsearch-dsl
@@ -85,9 +85,11 @@ six==1.15.0
     #   python-jose
 starlette==0.13.6
     # via fastapi
-typing-extensions==3.7.4.3
-    # via mangum
-urllib3==1.25.10
+typing-extensions==3.10.0.0
+    # via
+    #   mangum
+    #   pydantic
+urllib3==1.25.11
     # via
     #   botocore
     #   elasticsearch
