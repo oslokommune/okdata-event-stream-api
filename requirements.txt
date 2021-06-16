@@ -36,10 +36,14 @@ jsonschema==3.2.0
     # via okdata-sdk
 mangum==0.10.0
     # via event-stream-api (setup.py)
+okdata-aws==0.4.0
+    # via event-stream-api (setup.py)
 okdata-resource-auth==0.1.0
     # via event-stream-api (setup.py)
 okdata-sdk==0.8.1
-    # via event-stream-api (setup.py)
+    # via
+    #   event-stream-api (setup.py)
+    #   okdata-aws
 prettytable==2.1.0
     # via okdata-sdk
 pyasn1==0.4.8
@@ -47,7 +51,9 @@ pyasn1==0.4.8
     #   python-jose
     #   rsa
 pydantic==1.8.1
-    # via fastapi
+    # via
+    #   fastapi
+    #   okdata-aws
 pyjwt==2.1.0
     # via okdata-sdk
 pyrsistent==0.17.3
@@ -85,6 +91,8 @@ six==1.16.0
     #   python-jose
 starlette==0.13.6
     # via fastapi
+structlog==21.1.0
+    # via okdata-aws
 typing-extensions==3.10.0.0
     # via
     #   mangum

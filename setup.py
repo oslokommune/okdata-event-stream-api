@@ -22,10 +22,11 @@ setup(
         "elasticsearch-dsl==7.2.1",
         "fastapi==0.61.1",
         "mangum==0.10.0",
+        "okdata-aws>=0.4.0",
+        "okdata-resource-auth",
         "okdata-sdk>=0.8.1",
         "pytz",
         "requests-aws4auth==1.0",
         "shortuuid",
-        "okdata-resource-auth",
     ],
 )
