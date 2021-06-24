@@ -24,7 +24,7 @@ elasticsearch-dsl==7.2.1
     # via event-stream-api (setup.py)
 elasticsearch==7.12.1
     # via elasticsearch-dsl
-fastapi==0.61.1
+fastapi==0.65.2
     # via event-stream-api (setup.py)
 idna==2.10
     # via requests
