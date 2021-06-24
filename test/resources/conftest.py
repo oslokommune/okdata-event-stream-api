@@ -32,43 +32,10 @@ def mock_authorizer(monkeypatch):
 @pytest.fixture
 def mock_keycloak(monkeypatch):
     def introspect(self, token):
-        if token in [valid_token, valid_token_no_access]:
-            return {
-                "exp": 1594907114,
-                "iat": 1594906814,
-                "jti": "***REMOVED***",
-                "iss": "***REMOVED***",
-                "aud": "account",
-                "sub": "***REMOVED***",
-                "typ": "Bearer",
-                "azp": "token-service",
-                "session_state": "***REMOVED***",
-                "name": "Jane Doe",
-                "given_name": "Jane",
-                "family_name": "Doe",
-                "preferred_username": "janedoe",
-                "email": "***REMOVED***",
-                "email_verified": False,
-                "acr": "1",
-                "realm_access": {
-                    "roles": ["ok-user", "offline_access", "uma_authorization"]
-                },
-                "resource_access": {
-                    "account": {
-                        "roles": [
-                            "manage-account",
-                            "manage-account-links",
-                            "view-profile",
-                        ]
-                    }
-                },
-                "scope": "profile email",
-                "client_id": "token-service",
-                "username": username,
-                "active": True,
-            }
-        else:
-            return {"active": False, "username": username}
+        return {
+            "active": token in [valid_token, valid_token_no_access],
+            "username": username,
+        }
 
     monkeypatch.setattr(KeycloakOpenID, "introspect", introspect)
 
