@@ -27,6 +27,10 @@ Set necessary environment variables:
 export AWS_PROFILE=okdata-dev
 export AWS_REGION=eu-west-1
 export OKDATA_ENVIRONMENT=dev
+export KEYCLOAK_SERVER=https://login-test.oslo.kommune.no
+export KEYCLOAK_REALM=api-catalog
+export RESOURCE_SERVER_CLIENT_ID=okdata-resource-server
+export ES_ENDPOINT=<ES ENDPOINT>
 ```
 
 Start up Flask app locally. Binds to port 5000 by default:
