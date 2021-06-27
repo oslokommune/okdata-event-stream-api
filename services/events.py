@@ -71,16 +71,21 @@ class ElasticsearchDataService:
 
         return count
 
-    def get_event_count_granular(self, dataset_id, version, from_range, to_range, pattern):
+    def get_event_count_granular(
+        self, dataset_id, version, from_range, to_range, pattern
+    ):
         dataset, index = self.get_es_information(dataset_id, version)
         alias = "event_by_count"
         es = ElasticsearchConnection()
         es.connect_to_es(index, alias)
         s = Search(using=alias, index=index)
 
-        s.aggs.bucket("count_events", "date_range", field="timestamp", ranges=[
-            {"to": f'{to_range}/{pattern}', "from": f'{from_range}/{pattern}'}
-        ])
+        s.aggs.bucket(
+            "count_events",
+            "date_range",
+            field="timestamp",
+            ranges=[{"to": f"{to_range}/{pattern}", "from": f"{from_range}/{pattern}"}],
+        )
 
         response = s.execute()
 
@@ -88,7 +93,9 @@ class ElasticsearchDataService:
 
         return count
 
-    def get_single_aggregation(self, dataset_id, version, from_date, to_date, field, size):
+    def get_single_aggregation(
+        self, dataset_id, version, from_date, to_date, field, size
+    ):
         dataset, index = self.get_es_information(dataset_id, version)
         alias = "single_aggregation"
 
@@ -101,17 +108,19 @@ class ElasticsearchDataService:
 
         s = Search(using=alias, index=index).filter("range", **filter_args)
 
-        s.aggs.bucket(f"count_per_{field}", "terms", field=f"{field}.keyword", size=size)
+        s.aggs.bucket(
+            f"count_per_{field}", "terms", field=f"{field}.keyword", size=size
+        )
 
         response = s.execute()
 
-        bucket = response["aggregations"][f"count_per_{field}"]['buckets']
+        bucket = response["aggregations"][f"count_per_{field}"]["buckets"]
 
-        return {
-            "data": [x.to_dict() for x in bucket]
-        }
+        return {"data": [x.to_dict() for x in bucket]}
 
-    def count_events_by_range(self, dataset_id, version, from_date, to_date, from_range, to_range):
+    def count_events_by_range(
+        self, dataset_id, version, from_date, to_date, from_range, to_range
+    ):
         dataset, index = self.get_es_information(dataset_id, version)
         alias = "count_events_by_range"
 
@@ -124,9 +133,12 @@ class ElasticsearchDataService:
 
         s = Search(using=alias, index=index).filter("range", **filter_args)
 
-        s.aggs.bucket("count", "date_range", field="timestamp", ranges=[
-            {"to": to_range, "from": from_range}
-        ])
+        s.aggs.bucket(
+            "count",
+            "date_range",
+            field="timestamp",
+            ranges=[{"to": to_range, "from": from_range}],
+        )
 
         response = s.execute()
 
@@ -147,15 +159,18 @@ class ElasticsearchDataService:
 
         s = Search(using=alias, index=index).filter("range", **filter_args)
 
-        s.aggs.bucket(f"call_per_{interval}", "date_histogram", field=timestamp_field, interval=interval)
+        s.aggs.bucket(
+            f"call_per_{interval}",
+            "date_histogram",
+            field=timestamp_field,
+            interval=interval,
+        )
 
         response = s.execute()
 
         bucket = response["aggregations"][f"call_per_{interval}"]["buckets"]
 
-        return {
-            "values": [x.to_dict() for x in bucket]
-        }
+        return {"values": [x.to_dict() for x in bucket]}
 
     def get_average_count(self, dataset_id, version, field, interval):
         dataset, index = self.get_es_information(dataset_id, version)
@@ -166,8 +181,14 @@ class ElasticsearchDataService:
 
         s = Search(using=alias, index=index)
 
-        s.aggs.bucket(f"count_per_{interval}", "date_histogram", field=field, interval=interval)
-        s.aggs.bucket(f"avg_count_per_{interval}", "avg_bucket", buckets_path=f"count_per_{interval}>_count")
+        s.aggs.bucket(
+            f"count_per_{interval}", "date_histogram", field=field, interval=interval
+        )
+        s.aggs.bucket(
+            f"avg_count_per_{interval}",
+            "avg_bucket",
+            buckets_path=f"count_per_{interval}>_count",
+        )
 
         response = s.execute()
 

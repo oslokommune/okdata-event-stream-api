@@ -30,7 +30,7 @@ export OKDATA_ENVIRONMENT=dev
 export KEYCLOAK_SERVER=https://login-test.oslo.kommune.no
 export KEYCLOAK_REALM=api-catalog
 export RESOURCE_SERVER_CLIENT_ID=okdata-resource-server
-export ES_ENDPOINT=<ES ENDPOINT>
+export ES_API_ENDPOINT=<ES ENDPOINT>
 ```
 
 Start up Flask app locally. Binds to port 5000 by default:

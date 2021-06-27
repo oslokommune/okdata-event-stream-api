@@ -38,12 +38,13 @@ def count(
 
     return data
 
+
 @router.get(
     "/granular",
     dependencies=[Depends(authorize("okdata:dataset:read")), Depends(version_exists)],
     responses=error_message_models(400),
 )
-def count(
+def granular(
     dataset_id: str,
     version: str,
     from_range: str,
@@ -54,19 +55,26 @@ def count(
     logger.info(
         f"Getting granular count event with id: {dataset_id}-{version} from {from_range} to {to_range} in pattern {pattern}"
     )
-    data = query_service.get_event_count_granular(dataset_id=dataset_id, version=version, from_range=from_range, to_range=to_range, pattern=pattern)
+    data = query_service.get_event_count_granular(
+        dataset_id=dataset_id,
+        version=version,
+        from_range=from_range,
+        to_range=to_range,
+        pattern=pattern,
+    )
 
     if data is None:
         raise ErrorResponse(400, f"Could not find event: {dataset_id}/{version}")
 
     return data
 
+
 @router.get(
     "/average",
     dependencies=[Depends(authorize("okdata:dataset:read")), Depends(version_exists)],
     responses=error_message_models(400),
 )
-def count(
+def average(
     dataset_id: str,
     version: str,
     interval: str,
