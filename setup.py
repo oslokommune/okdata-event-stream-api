@@ -18,7 +18,7 @@ setup(
     url="https://github.com/oslokommune/okdata-event-stream-api",
     py_modules=["app"],
     install_requires=[
-        "boto3==1.15.16",
+        "boto3>=1.17",
         "elasticsearch-dsl==7.2.1",
         "fastapi>=0.65.2",
         "mangum==0.10.0",
