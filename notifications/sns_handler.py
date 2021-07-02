@@ -36,6 +36,6 @@ def cloudformation_event_message_to_dict(message):
         key: value.strip("'")
         for (key, value) in map(
             lambda line: line.split("=", 1),
-            filter(lambda line: bool(line), message.split("\n")),
+            filter(None, message.split("\n")),
         )
     }

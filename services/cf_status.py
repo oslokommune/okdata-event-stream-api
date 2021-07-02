@@ -44,6 +44,7 @@ def resolve_event_stream_id(stack_name):
         dataset_id = "-".join(components[0:-2])
         version = components[-2]
         return f"{dataset_id}/{version}"
+    return None
 
 
 def resolve_cf_stack_type(stack_name):

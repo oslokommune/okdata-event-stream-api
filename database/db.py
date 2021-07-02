@@ -25,3 +25,4 @@ class EventStreamsTable:
                 event_stream_items, key=lambda item: item["config_version"]
             )
             return EventStream(**current_item)
+        return None
