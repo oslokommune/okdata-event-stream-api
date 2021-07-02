@@ -10,9 +10,9 @@ provider:
     name: ${self:custom.deploymentBucket.${self:provider.stage}, self:custom.deploymentBucket.dev}
     serverSideEncryption: AES256
   deploymentPrefix: deploy
-  rolePermissionsBoundary: "arn:aws:iam::#{AWS::AccountId}:policy/oslokommune/oslokommune-boundary"
+  rolePermissionsBoundary: !Sub "arn:aws:iam::${AWS::AccountId}:policy/oslokommune/oslokommune-boundary"
   iamManagedPolicies:
-    - "arn:aws:iam::#{AWS::AccountId}:policy/event-stream-api-policy"
+    - !Sub "arn:aws:iam::${AWS::AccountId}:policy/event-stream-api-policy"
     - "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
   tags:
     GIT_REV: ${git:branch}:${git:sha1}
@@ -48,12 +48,11 @@ functions:
   update_cf_status:
     handler: notifications.sns_handler.handle
     events:
-      - sns: "arn:aws:sns:#{AWS::Region}:#{AWS::AccountId}:event-stream-api-cloudformation-events"
+      - sns: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:event-stream-api-cloudformation-events"
 
 plugins:
   - serverless-python-requirements
   - serverless-plugin-git-variables
-  - serverless-pseudo-parameters
   - serverless-es-logs
 
 resources:
