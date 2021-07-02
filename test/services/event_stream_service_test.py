@@ -123,5 +123,6 @@ def mock_dataset(monkeypatch):
     def get_dataset(self, id):
         if id == test_data.dataset_id:
             return {"Id": id, "accessRights": test_data.accessRights}
+        return None
 
     monkeypatch.setattr(Dataset, "get_dataset", get_dataset)
