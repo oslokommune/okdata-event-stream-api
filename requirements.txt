@@ -6,9 +6,9 @@
 #
 attrs==21.2.0
     # via jsonschema
-boto3==1.15.16
+boto3==1.17.103
     # via okdata-event-stream-api (setup.py)
-botocore==1.18.18
+botocore==1.20.103
     # via
     #   boto3
     #   s3transfer
@@ -78,7 +78,7 @@ requests==2.25.1
     #   requests-aws4auth
 rsa==4.7.2
     # via python-jose
-s3transfer==0.3.7
+s3transfer==0.4.2
     # via boto3
 shortuuid==1.0.1
     # via okdata-event-stream-api (setup.py)
@@ -97,7 +97,7 @@ typing-extensions==3.10.0.0
     # via
     #   mangum
     #   pydantic
-urllib3==1.25.11
+urllib3==1.26.6
     # via
     #   botocore
     #   elasticsearch
