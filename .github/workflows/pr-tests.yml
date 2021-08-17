@@ -1,8 +1,7 @@
-name: Run Tests
+name: PR Tests
 on:
   pull_request:
-  push:
-    branches: main
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,4 +14,4 @@ jobs:
     - name: Install dependencies
       run: pip install tox
     - name: Test with tox
-      run: tox -e py,flake8,black
+      run: tox -e py,flake8,black,mypy
