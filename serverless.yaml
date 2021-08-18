@@ -48,7 +48,15 @@ functions:
   update_cf_status:
     handler: notifications.sns_handler.handle
     events:
-      - sns: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:event-stream-api-cloudformation-events"
+      - sns:
+          arn:
+            Fn::Join:
+              - ':'
+              - - 'arn:aws:sns'
+                - Ref: 'AWS::Region'
+                - Ref: 'AWS::AccountId'
+                - 'event-stream-api-cloudformation-events'
+          topicName: event-stream-api-cloudformation-events
 
 plugins:
   - serverless-python-requirements
