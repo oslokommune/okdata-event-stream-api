@@ -43,11 +43,9 @@ export FLASK_ENV=development
 export FLASK_RUN_PORT=8080
 ```
 
-
 ## Deploy
 
-Deploy to dev is automatic via GitHub Actions, while deploy to prod can be triggered with GitHub Actions via dispatch. You can alternatively deploy from local machine (requires `saml2aws`) with: `make deploy` or `make deploy-prod`.
-
+Deploy to both dev and prod is automatic via GitHub Actions on push to main. You can alternatively deploy from local machine (requires `saml2aws`) with: `make deploy` or `make deploy-prod`.
 
 ## Creating and managing event streams
 
