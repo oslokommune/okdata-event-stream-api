@@ -21,6 +21,7 @@ provider:
     GIT_REV: ${git:branch}:${git:sha1}
     VERSION: ${self:custom.version}
     OKDATA_ENVIRONMENT: ${self:provider.stage}
+    SERVICE_NAME: ${self:service}
     ES_API_ENDPOINT: ${ssm:/dataplatform/shared/eventdata-elasticsearch-endpoint}
     ROOT_PATH: "/streams"
     KEYCLOAK_SERVER: ${ssm:/dataplatform/shared/keycloak-server-url}

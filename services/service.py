@@ -1,3 +1,4 @@
+from okdata.aws.logging import log_add
 from okdata.sdk.data.dataset import Dataset
 
 from database import EventStreamsTable, EventStream
@@ -12,6 +13,7 @@ class EventService:
         self.event_streams_table = EventStreamsTable()
 
     def get_event_stream(self, dataset_id, version):
+        log_add(dataset_id=dataset_id, version=version)
         event_stream_id = f"{dataset_id}/{version}"
         return self.event_streams_table.get_event_stream(event_stream_id)
 
