@@ -1,7 +1,8 @@
 import logging
+from datetime import date
 
 from fastapi import APIRouter, Depends, Path, Query
-from datetime import date
+from pydantic import BaseModel
 
 from resources.authorizer import authorize, version_exists
 from resources.origo_clients import dataset_client
@@ -14,6 +15,10 @@ router = APIRouter()
 
 def query_service(dataset_client=Depends(dataset_client)) -> ElasticsearchDataService:
     return ElasticsearchDataService(dataset_client)
+
+
+class StandardResponse(BaseModel):
+    message: str
 
 
 @router.get(
@@ -42,3 +47,15 @@ def get(
         raise ErrorResponse(400, f"Could not find event: {dataset_id}/{version}")
 
     return data
+
+
+@router.post(
+    "/{dataset_id}/{version}",
+    dependencies=[
+        Depends(authorize("okdata:dataset:write")),
+        Depends(version_exists),
+    ],
+    response_model=StandardResponse,
+)
+def post_events(dataset_id: str, version: str):
+    ""

@@ -20,3 +20,13 @@ class ResourceUnderConstruction(Exception):
 
 class ResourceUnderDeletion(Exception):
     pass
+
+
+class PostEventsError(Exception):
+    pass
+
+
+class PostEventsFailedElements(Exception):
+    def __init__(self, failed_elements):
+        self.failed_elements = failed_elements
+    pass
