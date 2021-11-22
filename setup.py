@@ -26,7 +26,9 @@ setup(
         "okdata-resource-auth",
         "okdata-sdk>=0.8.1",
         "pytz",
+        "requests",
         "requests-aws4auth==1.0",
         "shortuuid",
+        "simplejson",
     ],
 )

@@ -20,3 +20,9 @@ class ResourceUnderConstruction(Exception):
 
 class ResourceUnderDeletion(Exception):
     pass
+
+
+class PutRecordsError(Exception):
+    def __init__(self, records):
+        self.num_records = len(records)
+        super().__init__(f"Request failed for some elements: {records}")
