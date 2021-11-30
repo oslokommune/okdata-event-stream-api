@@ -49,7 +49,7 @@ def test_post_events(
     res = mock_client.post(
         "/foo/1/events",
         headers={"Authorization": f"Bearer {valid_token}"},
-        json={"events": [{"foo": "bar"}]},
+        json=[{"foo": "bar"}],
     )
     assert res.status_code == 200
 
@@ -84,7 +84,7 @@ def test_post_events_failed_records(
     res = mock_client.post(
         "/foo/1/events",
         headers={"Authorization": f"Bearer {valid_token}"},
-        json={"events": [{"foo": "bar"}]},
+        json=[{"foo": "bar"}],
     )
     assert res.status_code == 500
     assert res.json()["message"] == "Request failed for some elements: ['foo']"

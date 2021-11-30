@@ -5,7 +5,6 @@ from typing import List
 from botocore.client import ClientError
 from fastapi import APIRouter, Depends, Path, Query, status
 from okdata.aws.logging import log_add
-from pydantic import BaseModel
 from requests.exceptions import HTTPError
 
 from resources.authorizer import authorize, version_exists
@@ -53,10 +52,6 @@ def get(
     return data
 
 
-class Events(BaseModel):
-    events: List[dict]
-
-
 @router.post(
     "",
     dependencies=[
@@ -76,7 +71,7 @@ def post(
     dataset_id: str = Path(..., min_length=3, max_length=70, regex="^[a-z0-9-]*$"),
     version: str = Path(..., min_length=1),
     event_service=Depends(event_service),
-    events: Events,
+    events: List[dict],
 ):
     log_add(dataset_id=dataset_id, version=version)
 
@@ -88,7 +83,7 @@ def post(
         )
 
     try:
-        return event_service.send_events(dataset, version, events.events)
+        return event_service.send_events(dataset, version, events)
     except PutRecordsError as e:
         log_add(failed_records=e.num_records)
         raise ErrorResponse(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
