@@ -5,7 +5,6 @@ from typing import List
 from botocore.client import ClientError
 from fastapi import APIRouter, Depends, Path, Query, status
 from okdata.aws.logging import log_add
-from requests.exceptions import HTTPError
 
 from resources.authorizer import authorize, version_exists
 from resources.errors import ErrorResponse, error_message_models
@@ -74,13 +73,7 @@ def post(
     events: List[dict],
 ):
     log_add(dataset_id=dataset_id, version=version)
-
-    try:
-        dataset = event_service.dataset_client.get_dataset(dataset_id)
-    except HTTPError:
-        raise ErrorResponse(
-            status.HTTP_404_NOT_FOUND, f"Dataset '{dataset_id}' not found"
-        )
+    dataset = event_service.dataset_client.get_dataset(dataset_id)
 
     try:
         return event_service.send_events(dataset, version, events)
