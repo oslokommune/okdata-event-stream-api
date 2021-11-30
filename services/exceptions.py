@@ -24,5 +24,10 @@ class ResourceUnderDeletion(Exception):
 
 class PutRecordsError(Exception):
     def __init__(self, records):
-        self.num_records = len(records)
-        super().__init__(f"Request failed for some elements: {records}")
+        self.records = records
+        super().__init__(
+            "Request failed for {} element{}".format(
+                len(records),
+                "s" if len(records) > 1 else "",
+            )
+        )

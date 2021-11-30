@@ -78,7 +78,9 @@ def post(
     try:
         return event_service.send_events(dataset, version, events)
     except PutRecordsError as e:
-        log_add(failed_records=e.num_records)
-        raise ErrorResponse(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+        log_add(failed_records=len(e.records))
+        raise ErrorResponse(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, str(e), failed_records=e.records
+        )
     except ClientError:
         raise ErrorResponse(status.HTTP_500_INTERNAL_SERVER_ERROR, "Server error")

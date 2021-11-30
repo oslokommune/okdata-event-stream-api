@@ -87,7 +87,9 @@ def test_post_events_failed_records(
         json=[{"foo": "bar"}],
     )
     assert res.status_code == 500
-    assert res.json()["message"] == "Request failed for some elements: ['foo']"
+    data = res.json()
+    assert data["message"] == "Request failed for 1 element"
+    assert data["failed_records"] == ["foo"]
 
 
 @mock_kinesis
