@@ -36,4 +36,7 @@ app.include_router(
 
 @app.exception_handler(ErrorResponse)
 def abort_exception_handler(request: Request, exc: ErrorResponse):
-    return JSONResponse(status_code=exc.status_code, content={"message": exc.message})
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.message, **exc.extra_context},
+    )

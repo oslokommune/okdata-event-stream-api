@@ -1,12 +1,15 @@
 import logging
-
-from fastapi import APIRouter, Depends, Path, Query
 from datetime import date
+from typing import List
+
+from botocore.client import ClientError
+from fastapi import APIRouter, Depends, Path, Query, status
+from okdata.aws.logging import log_add
 
 from resources.authorizer import authorize, version_exists
-from resources.origo_clients import dataset_client
 from resources.errors import ErrorResponse, error_message_models
-from services import ElasticsearchDataService
+from resources.origo_clients import dataset_client
+from services import ElasticsearchDataService, EventService, PutRecordsError
 
 logger = logging.getLogger()
 router = APIRouter()
@@ -14,6 +17,10 @@ router = APIRouter()
 
 def query_service(dataset_client=Depends(dataset_client)) -> ElasticsearchDataService:
     return ElasticsearchDataService(dataset_client)
+
+
+def event_service(dataset_client=Depends(dataset_client)) -> EventService:
+    return EventService(dataset_client)
 
 
 @router.get(
@@ -42,3 +49,38 @@ def get(
         raise ErrorResponse(400, f"Could not find event: {dataset_id}/{version}")
 
     return data
+
+
+@router.post(
+    "",
+    dependencies=[
+        Depends(authorize("okdata:dataset:write")),
+        Depends(version_exists),
+    ],
+    responses=error_message_models(
+        status.HTTP_400_BAD_REQUEST,
+        status.HTTP_403_FORBIDDEN,
+        status.HTTP_404_NOT_FOUND,
+        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status.HTTP_500_INTERNAL_SERVER_ERROR,
+    ),
+)
+def post(
+    *,
+    dataset_id: str = Path(..., min_length=3, max_length=70, regex="^[a-z0-9-]*$"),
+    version: str = Path(..., min_length=1),
+    event_service=Depends(event_service),
+    events: List[dict],
+):
+    log_add(dataset_id=dataset_id, version=version)
+    dataset = event_service.dataset_client.get_dataset(dataset_id)
+
+    try:
+        return event_service.send_events(dataset, version, events)
+    except PutRecordsError as e:
+        log_add(failed_records=len(e.records))
+        raise ErrorResponse(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, str(e), failed_records=e.records
+        )
+    except ClientError:
+        raise ErrorResponse(status.HTTP_500_INTERNAL_SERVER_ERROR, "Server error")

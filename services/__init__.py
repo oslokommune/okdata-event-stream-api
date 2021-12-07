@@ -1,9 +1,10 @@
 from .exceptions import (
+    PutRecordsError,
     ResourceConflict,
     ResourceNotFound,
-    SubResourceNotFound,
     ResourceUnderConstruction,
     ResourceUnderDeletion,
+    SubResourceNotFound,
 )
 from .service import EventService
 from .stream import EventStreamService
@@ -13,15 +14,16 @@ from .cf_status import CfStatusService
 from .events import ElasticsearchDataService
 
 __all__ = [
-    "ResourceConflict",
-    "ResourceNotFound",
-    "SubResourceNotFound",
-    "ResourceUnderConstruction",
-    "ResourceUnderDeletion",
-    "EventService",
-    "EventStreamService",
-    "SinkService",
-    "SubscribableService",
     "CfStatusService",
     "ElasticsearchDataService",
+    "EventService",
+    "EventStreamService",
+    "PutRecordsError",
+    "ResourceConflict",
+    "ResourceNotFound",
+    "ResourceUnderConstruction",
+    "ResourceUnderDeletion",
+    "SinkService",
+    "SubResourceNotFound",
+    "SubscribableService",
 ]

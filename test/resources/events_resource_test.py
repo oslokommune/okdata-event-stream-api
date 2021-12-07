@@ -1,83 +1,139 @@
 import pytest
-from services.events import ElasticsearchDataService
+from moto import mock_kinesis
+from okdata.sdk.data.dataset import Dataset
 
-from .conftest import valid_token
-
-event_dummy_data = {
-    "tidspunkt": "2020-06-02T09:48:58+02:00",
-    "plasseringId": 1,
-    "sensorId": 1,
-    "stasjonId": 41,
-    "stasjon": "haraldrud-gjenbruk",
-}
-dataset_id = "besoksdata"
-version = "1"
-from_date = "2020-06-01"
-to_date = "2020-06-05"
-
-auth_header = {"Authorization": f"bearer {valid_token}"}
+from .conftest import valid_token, valid_token_no_access
+from services import PutRecordsError
+from services.service import EventService
+from test.util import create_event_stream
 
 
-class TestGetEvent:
-    def test_GetEventHistory(
-        self,
-        mock_client,
-        mock_event_data,
-        mock_dataset_versions,
-        mock_authorizer,
-        mock_keycloak,
-    ):
-        response = mock_client.get(
-            f"/{dataset_id}/{version}/events?from_date={from_date}&to_date={to_date}",
-            headers=auth_header,
-        )
-        response_data = response.json()
-        assert response.status_code == 200
-        assert response_data["stasjonId"] == 41
-
-    def test_GetEventHistory_no_data(
-        self,
-        mock_client,
-        mock_event_no_data,
-        mock_dataset_versions,
-        mock_authorizer,
-        mock_keycloak,
-    ):
-        response = mock_client.get(
-            f"/{dataset_id}/{version}/events?from_date={from_date}&to_date={to_date}",
-            headers=auth_header,
-        )
-        response_data = response.json()
-        assert response.status_code == 400
-        assert (
-            response_data["message"] == f"Could not find event: {dataset_id}/{version}"
-        )
+def test_get_event_history(
+    mock_client, mock_event_data, mock_dataset_versions, mock_authorizer, mock_keycloak
+):
+    response = mock_client.get(
+        "/foo/1/events?from_date=2020-06-01&to_date=2020-06-05",
+        headers={"Authorization": f"Bearer {valid_token}"},
+    )
+    data = response.json()
+    assert response.status_code == 200
+    assert data["stasjonId"] == 41
 
 
-### Fixtures for TestGetEvent ###
+def test_get_event_history_no_data(
+    mock_client,
+    mock_event_no_data,
+    mock_dataset_versions,
+    mock_authorizer,
+    mock_keycloak,
+):
+    response = mock_client.get(
+        "/foo/1/events?from_date=2020-06-01&to_date=2020-06-05",
+        headers={"Authorization": f"Bearer {valid_token}"},
+    )
+    data = response.json()
+    assert response.status_code == 400
+    assert data["message"] == "Could not find event: foo/1"
+
+
+@mock_kinesis
+def test_post_events(
+    mock_authorizer,
+    mock_client,
+    mock_dataset,
+    mock_dataset_versions,
+    mock_keycloak,
+    mock_stream_name,
+):
+    create_event_stream("dp.green.foo.incoming.1.json")
+    res = mock_client.post(
+        "/foo/1/events",
+        headers={"Authorization": f"Bearer {valid_token}"},
+        json=[{"foo": "bar"}],
+    )
+    assert res.status_code == 200
+
+
+@mock_kinesis
+def test_post_events_unauthorized(
+    mock_authorizer,
+    mock_client,
+    mock_dataset,
+    mock_dataset_versions,
+    mock_keycloak,
+    mock_stream_name,
+):
+    create_event_stream("dp.green.foo.incoming.1.json")
+    res = mock_client.post(
+        "/foo/1/events",
+        headers={"Authorization": f"Bearer {valid_token_no_access}"},
+        json={"events": [{"foo": "bar"}]},
+    )
+    assert res.status_code == 403
+
+
+def test_post_events_failed_records(
+    mock_authorizer,
+    mock_client,
+    mock_dataset,
+    mock_dataset_versions,
+    mock_keycloak,
+    mock_stream_name,
+    failed_records,
+):
+    res = mock_client.post(
+        "/foo/1/events",
+        headers={"Authorization": f"Bearer {valid_token}"},
+        json=[{"foo": "bar"}],
+    )
+    assert res.status_code == 500
+    data = res.json()
+    assert data["message"] == "Request failed for 1 element"
+    assert data["failed_records"] == ["foo"]
+
+
+@mock_kinesis
+def test_post_events_validation_error(
+    mock_authorizer,
+    mock_client,
+    mock_dataset,
+    mock_dataset_versions,
+    mock_keycloak,
+    mock_stream_name,
+):
+    create_event_stream("dp.green.foo.incoming.1.json")
+    res = mock_client.post(
+        "/foo/1/events",
+        headers={"Authorization": f"Bearer {valid_token}"},
+        json=["invalid"],
+    )
+    assert res.status_code == 422
+
+
 @pytest.fixture()
-def mock_event_data(monkeypatch):
-    def get_event_by_date(
-        self, dataset_id, version, from_date, to_date, page, page_size
-    ):
-        return event_dummy_data
+def failed_records(monkeypatch):
+    def put_records_to_kinesis(*args, **kwargs):
+        raise PutRecordsError(["foo"])
 
     monkeypatch.setattr(
-        ElasticsearchDataService,
-        "get_event_by_date",
-        get_event_by_date,
+        EventService,
+        "_put_records_to_kinesis",
+        put_records_to_kinesis,
     )
 
 
 @pytest.fixture()
-def mock_event_no_data(monkeypatch):
-    def get_event_by_date(
-        self, dataset_id, version, from_date, to_date, page, page_size
-    ):
-        return None
+def mock_stream_name(monkeypatch):
+    def stream_name(self, dataset_id, version, confidentiality):
+        return f"dp.{confidentiality}.{dataset_id}.incoming.{version}.json"
 
-    monkeypatch.setattr(
-        ElasticsearchDataService,
-        "get_event_by_date",
-        get_event_by_date,
-    )
+    monkeypatch.setattr(EventService, "_stream_name", stream_name)
+
+
+@pytest.fixture()
+def mock_dataset(monkeypatch):
+    def get_dataset(self, dataset_id, *args, **kwargs):
+        if dataset_id == "foo":
+            return {"Id": "foo", "accessRights": "public"}
+
+    monkeypatch.setattr(Dataset, "get_dataset", get_dataset)
