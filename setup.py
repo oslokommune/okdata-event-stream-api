@@ -1,14 +1,10 @@
-import os
-
 from setuptools import setup
 
 with open("README.md", encoding="utf-8") as f:
     long_description = f.read()
 
-service_name = os.path.basename(os.getcwd())
-
 setup(
-    name=service_name,
+    name="okdata-event-stream-api",
     version="0.1.0",
     author="Origo Dataplattform",
     author_email="dataplattform@oslo.kommune.no",
@@ -22,7 +18,7 @@ setup(
         "elasticsearch-dsl==7.2.1",
         "fastapi>=0.65.2",
         "mangum==0.10.0",
-        "okdata-aws>=0.4.0",
+        "okdata-aws>=1.0.0",
         "okdata-resource-auth",
         "okdata-sdk>=0.8.1",
         "pytz",
