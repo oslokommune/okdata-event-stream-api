@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from okdata.aws.logging import add_fastapi_logging
 
-from resources import stream, sinks, subscribable, events, events_statistics
+from resources import stream, sinks, subscribable, events
 from resources.errors import ErrorResponse
 
 
@@ -26,11 +26,6 @@ app.include_router(
     events.router,
     prefix=prefix + "/events",
     tags=["events"],
-)
-app.include_router(
-    events_statistics.router,
-    prefix=prefix + "/events/statistics",
-    tags=["event statistics"],
 )
 
 
